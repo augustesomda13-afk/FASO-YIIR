@@ -1,20 +1,25 @@
-// Sélection des éléments du DOM
+(() => {
 const propertyGrid = document.getElementById('propertyGrid');
 const propertyForm = document.getElementById('propertyForm');
 const searchInput = document.getElementById('searchInput');
 const filterType = document.getElementById('filterType');
 const emptyState = document.getElementById('emptyState');
 const counter = document.getElementById('counter');
-
+const backendStatus = document.getElementById('backendStatus');
+const accountPanel = document.getElementById('accountPanel');
+const authForm = document.getElementById('authForm');
+const authStatus = document.getElementById('authStatus');
+const signedInPanel = document.getElementById('signedInPanel');
+const signedInAs = document.getElementById('signedInAs');
+const signOutButton = document.getElementById('signOutButton');
+const publishAccess = document.getElementById('publishAccess');
+const propertyStatus = document.getElementById('propertyStatus');
 const bookingModal = document.getElementById('bookingModal');
 const modalPropertyTitle = document.getElementById('modalPropertyTitle');
 const modalPrice = document.getElementById('modalPrice');
 const paymentForm = document.getElementById('paymentForm');
 
-let selectedProperty = null;
-
-// Données initiales par défaut au Burkina Faso
-let properties = JSON.parse(localStorage.getItem('burkina_properties')) || [
+const defaultProperties = [
     {
         id: 1,
         title: 'Belle villa meublée',
@@ -35,164 +40,333 @@ let properties = JSON.parse(localStorage.getItem('burkina_properties')) || [
     }
 ];
 
-// Fonction pour afficher les logements
+const config = window.FASO_YIIR_SUPABASE;
+const supabaseConfigPresent = Boolean(config?.url && config?.anonKey);
+const supabaseReady = Boolean(
+    supabaseConfigPresent &&
+    window.supabase?.createClient
+);
+const supabase = supabaseReady
+    ? window.supabase.createClient(config.url, config.anonKey)
+    : null;
+
+let properties = [];
+let currentUser = null;
+let selectedProperty = null;
+
+function setStatus(element, message, isError = false) {
+    element.textContent = message;
+    element.classList.toggle('text-red-700', isError);
+    element.classList.toggle('text-gray-600', !isError);
+}
+
+function isAdmin() {
+    return currentUser?.app_metadata?.role === 'admin';
+}
+
 function renderProperties(data = properties) {
-    propertyGrid.innerHTML = '';
+    propertyGrid.replaceChildren();
     counter.textContent = `${data.length} bien(s) trouvé(s)`;
+    emptyState.classList.toggle('hidden', data.length !== 0);
 
-    if (data.length === 0) {
-        emptyState.classList.remove('hidden');
-        return;
-    } else {
-        emptyState.classList.add('hidden');
-    }
+    data.forEach(property => {
+        const card = document.createElement('article');
+        card.className = 'flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md';
 
-    data.forEach(prop => {
-        const card = document.createElement('div');
-        card.className = 'bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 flex flex-col justify-between hover:shadow-md transition';
-        card.innerHTML = `
-            <div>
-                <div class="relative h-48 bg-gray-200 overflow-hidden">
-                    <img src="${prop.image}" alt="${prop.title}" class="w-full h-full object-cover">
-                    <span class="absolute top-3 left-3 bg-emerald-600 text-white text-xs font-semibold px-2.5 py-1 rounded-md shadow">
-                        ${prop.type}
-                    </span>
-                </div>
-                <div class="p-5">
-                    <h3 class="font-bold text-lg text-gray-800 mb-1">${prop.title}</h3>
-                    <p class="text-sm text-gray-500 mb-3"><i class="fa-solid fa-location-dot text-emerald-600 mr-1"></i> ${prop.location}</p>
-                    <div class="text-emerald-700 font-extrabold text-lg mb-4">
-                        ${Number(prop.price).toLocaleString()} FCFA <span class="text-xs font-normal text-gray-500">/ mois</span>
-                    </div>
-                </div>
-            </div>
-            <div class="px-5 pb-5 pt-0 flex flex-col gap-2">
-                <button onclick="openModal(${prop.id})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-center py-2 px-3 rounded-lg text-sm font-semibold transition shadow-sm">
-                    <i class="fa-solid fa-bookmark mr-1"></i> Réserver & Payer
-                </button>
-                <div class="flex gap-2">
-                    <a href="tel:${prop.contact}" class="flex-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-center py-2 px-3 rounded-lg text-sm font-semibold transition">
-                        <i class="fa-solid fa-phone mr-1"></i> Appeler
-                    </a>
-                    <button onclick="deleteProperty(${prop.id})" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition" title="Supprimer">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-        propertyGrid.appendChild(card);
+        const details = document.createElement('div');
+        const imageFrame = document.createElement('div');
+        imageFrame.className = 'relative h-48 overflow-hidden bg-gray-200';
+        const image = document.createElement('img');
+        image.className = 'h-full w-full object-cover';
+        image.alt = property.title;
+        try {
+            const imageUrl = new URL(property.image);
+            if (imageUrl.protocol === 'https:' || imageUrl.protocol === 'http:') {
+                image.src = imageUrl.href;
+            }
+        } catch {
+            image.alt = `${property.title} (photo indisponible)`;
+        }
+        const type = document.createElement('span');
+        type.className = 'absolute left-3 top-3 rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white shadow';
+        type.textContent = property.type;
+        imageFrame.append(image, type);
+
+        const text = document.createElement('div');
+        text.className = 'p-5';
+        const title = document.createElement('h3');
+        title.className = 'mb-1 text-lg font-bold text-gray-800';
+        title.textContent = property.title;
+        const location = document.createElement('p');
+        location.className = 'mb-3 text-sm text-gray-500';
+        location.textContent = property.location;
+        const price = document.createElement('p');
+        price.className = 'mb-4 text-lg font-extrabold text-emerald-700';
+        price.textContent = `${Number(property.price).toLocaleString()} FCFA / mois`;
+        text.append(title, location, price);
+        details.append(imageFrame, text);
+
+        const actions = document.createElement('div');
+        actions.className = 'flex flex-col gap-2 px-5 pb-5';
+        const reserveButton = document.createElement('button');
+        reserveButton.type = 'button';
+        reserveButton.className = 'w-full rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700';
+        reserveButton.textContent = 'Réserver & Payer';
+        reserveButton.addEventListener('click', () => window.openModal(property.id));
+
+        const secondaryActions = document.createElement('div');
+        secondaryActions.className = 'flex gap-2';
+        const callLink = document.createElement('a');
+        callLink.className = 'flex-1 rounded-lg bg-emerald-50 px-3 py-2 text-center text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100';
+        callLink.href = `tel:${String(property.contact).replace(/[^\d+]/g, '')}`;
+        callLink.textContent = 'Appeler';
+        secondaryActions.append(callLink);
+
+        if (isAdmin()) {
+            const deleteButton = document.createElement('button');
+            deleteButton.type = 'button';
+            deleteButton.className = 'rounded-lg p-2 text-sm text-red-600 transition hover:bg-red-50';
+            deleteButton.textContent = 'Supprimer';
+            deleteButton.addEventListener('click', () => window.deleteProperty(property.id));
+            secondaryActions.append(deleteButton);
+        }
+
+        actions.append(reserveButton, secondaryActions);
+        card.append(details, actions);
+        propertyGrid.append(card);
     });
 }
 
-// Ouvrir la modale de paiement
-window.openModal = function(id) {
-    selectedProperty = properties.find(p => p.id === id);
-    if (selectedProperty) {
-        modalPropertyTitle.textContent = selectedProperty.title + ' (' + selectedProperty.location + ')';
-        modalPrice.value = Number(selectedProperty.price).toLocaleString() + ' FCFA';
-        bookingModal.classList.remove('hidden');
+function updateAccountUI() {
+    const signedIn = Boolean(currentUser);
+    authForm.classList.toggle('hidden', signedIn || !supabaseReady);
+    signedInPanel.classList.toggle('hidden', !signedIn);
+    signedInPanel.classList.toggle('flex', signedIn);
+    propertyForm.classList.toggle('hidden', !signedIn || !supabaseReady);
+    publishAccess.classList.toggle('hidden', signedIn && supabaseReady);
+    if (signedIn) {
+        signedInAs.textContent = `Connecté : ${currentUser.email}`;
+    } else if (supabaseReady) {
+        publishAccess.textContent = 'Connectez-vous ou créez un compte pour publier une annonce.';
     }
+    renderProperties();
 }
 
-// Fermer la modale
+async function loadProperties() {
+    if (!supabaseReady) {
+        properties = defaultProperties;
+        backendStatus.textContent = supabaseConfigPresent
+            ? 'La bibliothèque Supabase ne s’est pas chargée. Vérifiez votre connexion Internet ; la publication est désactivée.'
+            : 'La base partagée n’est pas encore configurée. Le catalogue de démonstration est affiché ; la publication est désactivée.';
+        updateAccountUI();
+        return;
+    }
+
+    backendStatus.textContent = '';
+    const { data, error } = await supabase
+        .from('properties')
+        .select('id, title, type, location, price, image, contact')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        properties = defaultProperties;
+        renderProperties();
+        setStatus(backendStatus, `La base partagée n’est pas encore prête (${error.message}). Le catalogue de démonstration reste affiché.`, true);
+        return;
+    }
+
+    properties = data;
+    renderProperties();
+}
+
+function filterAndRender() {
+    const query = searchInput.value.trim().toLocaleLowerCase();
+    const selectedType = filterType.value;
+    const filtered = properties.filter(property => {
+        const matchesText = property.title.toLocaleLowerCase().includes(query) ||
+            property.location.toLocaleLowerCase().includes(query);
+        return matchesText && (!selectedType || property.type === selectedType);
+    });
+    renderProperties(filtered);
+}
+
+window.openModal = function(id) {
+    selectedProperty = properties.find(property => property.id === id);
+    if (!selectedProperty) {
+        return;
+    }
+    modalPropertyTitle.textContent = `${selectedProperty.title} (${selectedProperty.location})`;
+    modalPrice.value = `${Number(selectedProperty.price).toLocaleString()} FCFA`;
+    bookingModal.classList.remove('hidden');
+};
+
 window.closeModal = function() {
     bookingModal.classList.add('hidden');
     paymentForm.reset();
-}
+};
 
-// Gestion du formulaire de paiement
-paymentForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const operator = document.querySelector('input[name="operator"]:checked').value;
+paymentForm.addEventListener('submit', function(event) {
+    event.preventDefault();
+    if (!selectedProperty) {
+        return;
+    }
+    const operator = document.querySelector('input[name="operator"]:checked')?.value;
     const phone = document.getElementById('payerPhone').value;
-
     alert(`Demande de paiement envoyée !\n\nUn code de validation ${operator} a été envoyé au ${phone} pour la réservation de : "${selectedProperty.title}".\n\n(Simulation réussie)`);
-    closeModal();
+    window.closeModal();
 });
 
-// Ajouter un bien avec gestion de l'image locale
-propertyForm.addEventListener('submit', function(e) {
-    e.preventDefault();
+authForm.addEventListener('submit', async function(event) {
+    event.preventDefault();
+    if (!supabaseReady) {
+        setStatus(authStatus, 'La connexion à la base n’est pas configurée.', true);
+        return;
+    }
 
-    const imageInput = document.getElementById('imageFile');
-    const file = imageInput.files[0];
-    const imageUrl = document.getElementById('image').value.trim();
+    const submitter = event.submitter;
+    const mode = submitter?.value;
+    const email = document.getElementById('accountEmail').value.trim();
+    const password = document.getElementById('accountPassword').value;
+    const { error, data } = mode === 'signup'
+        ? await supabase.auth.signUp({ email, password })
+        : await supabase.auth.signInWithPassword({ email, password });
 
+    if (error) {
+        setStatus(authStatus, error.message, true);
+        return;
+    }
+
+    if (mode === 'signup' && !data.session) {
+        setStatus(authStatus, 'Compte créé. Vérifiez votre boîte e-mail pour confirmer votre adresse avant de vous connecter.');
+        authForm.reset();
+        return;
+    }
+
+    setStatus(authStatus, mode === 'signup' ? 'Compte créé et connecté.' : 'Connexion réussie.');
+    currentUser = data.user;
+    updateAccountUI();
+    await loadProperties();
+});
+
+signOutButton.addEventListener('click', async function() {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+        setStatus(authStatus, `La déconnexion a échoué : ${error.message}`, true);
+        return;
+    }
+    currentUser = null;
+    updateAccountUI();
+    setStatus(authStatus, 'Vous êtes déconnecté.');
+});
+
+propertyForm.addEventListener('submit', async function(event) {
+    event.preventDefault();
+    if (!supabaseReady || !currentUser) {
+        setStatus(propertyStatus, 'Connectez-vous pour publier une annonce.', true);
+        return;
+    }
+
+    const submitButton = propertyForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    setStatus(propertyStatus, 'Publication en cours…');
+
+    let imageUrl = document.getElementById('image').value.trim();
+    const file = document.getElementById('imageFile').files[0];
     if (!file && !imageUrl) {
-        alert('Ajoutez une photo ou renseignez le lien de la photo.');
+        setStatus(propertyStatus, 'Ajoutez une photo ou renseignez le lien de la photo.', true);
+        submitButton.disabled = false;
         return;
     }
 
-    const addProperty = image => {
-        const newProp = {
-            id: Date.now(),
-            title: document.getElementById('title').value.trim(),
-            type: document.getElementById('type').value,
-            location: document.getElementById('location').value.trim(),
-            price: Number(document.getElementById('price').value),
-            image,
-            contact: document.getElementById('contact').value.trim()
-        };
-
-        const updatedProperties = [newProp, ...properties];
-        try {
-            localStorage.setItem('burkina_properties', JSON.stringify(updatedProperties));
-        } catch (error) {
-            console.error('Impossible d’enregistrer cette annonce dans le navigateur.', error);
-            alert('L’annonce n’a pas pu être enregistrée dans ce navigateur. Essayez avec un lien de photo au lieu d’un fichier volumineux.');
+    if (file) {
+        if (!file.type.startsWith('image/') || file.size > 5 * 1024 * 1024) {
+            setStatus(propertyStatus, 'Choisissez une image de 5 Mo maximum.', true);
+            submitButton.disabled = false;
             return;
         }
+        const extension = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '');
+        const objectPath = `${currentUser.id}/${crypto.randomUUID()}.${extension || 'img'}`;
+        const { error: uploadError } = await supabase.storage
+            .from('property-images')
+            .upload(objectPath, file, { contentType: file.type, upsert: false });
+        if (uploadError) {
+            setStatus(propertyStatus, `Échec de l’envoi de la photo : ${uploadError.message}`, true);
+            submitButton.disabled = false;
+            return;
+        }
+        imageUrl = supabase.storage.from('property-images').getPublicUrl(objectPath).data.publicUrl;
+    }
 
-        properties = updatedProperties;
-        propertyForm.reset();
-        filterAndRender();
-        alert('Annonce ajoutée. Elle est enregistrée dans ce navigateur.');
-    };
-
-    if (!file) {
-        addProperty(imageUrl);
+    try {
+        const parsedImageUrl = new URL(imageUrl);
+        if (parsedImageUrl.protocol !== 'https:' && parsedImageUrl.protocol !== 'http:') {
+            throw new Error('URL non autorisée');
+        }
+    } catch {
+        setStatus(propertyStatus, 'Le lien de la photo doit être une adresse HTTP ou HTTPS valide.', true);
+        submitButton.disabled = false;
         return;
     }
 
-    const reader = new FileReader();
-    reader.onload = function() {
-        if (typeof reader.result !== 'string') {
-            alert('La photo n’a pas pu être lue. Réessayez ou utilisez un lien de photo.');
-            return;
-        }
-        addProperty(reader.result);
+    const newProperty = {
+        title: document.getElementById('title').value.trim(),
+        type: document.getElementById('type').value,
+        location: document.getElementById('location').value.trim(),
+        price: Number(document.getElementById('price').value),
+        image: imageUrl,
+        contact: document.getElementById('contact').value.trim()
     };
-    reader.onerror = function() {
-        alert('La photo n’a pas pu être lue. Réessayez ou utilisez un lien de photo.');
-    };
-    reader.readAsDataURL(file);
+    const { error } = await supabase.from('properties').insert(newProperty);
+
+    if (error) {
+        setStatus(propertyStatus, `L’annonce n’a pas pu être publiée : ${error.message}`, true);
+        submitButton.disabled = false;
+        return;
+    }
+
+    propertyForm.reset();
+    setStatus(propertyStatus, 'Annonce publiée et visible par tous les visiteurs.');
+    submitButton.disabled = false;
+    await loadProperties();
 });
 
-// Supprimer un bien
-window.deleteProperty = function(id) {
-    if (confirm('Voulez-vous supprimer cette annonce ?')) {
-        properties = properties.filter(p => p.id !== id);
-        localStorage.setItem('burkina_properties', JSON.stringify(properties));
-        filterAndRender();
+window.deleteProperty = async function(id) {
+    if (!isAdmin() || !confirm('Voulez-vous supprimer cette annonce ?')) {
+        return;
     }
-}
 
-// Filtrer et afficher
-function filterAndRender() {
-    const query = searchInput.value.toLowerCase();
-    const selectedType = filterType.value;
-
-    const filtered = properties.filter(p => {
-        const matchText = p.title.toLowerCase().includes(query) || p.location.toLowerCase().includes(query);
-        const matchType = selectedType === "" || p.type === selectedType;
-        return matchText && matchType;
-    });
-
-    renderProperties(filtered);
-}
+    const { error } = await supabase.from('properties').delete().eq('id', id);
+    if (error) {
+        setStatus(propertyStatus, `La suppression a échoué : ${error.message}`, true);
+        return;
+    }
+    await loadProperties();
+};
 
 searchInput.addEventListener('input', filterAndRender);
 filterType.addEventListener('change', filterAndRender);
 
-// Lancement initial
-renderProperties();
+async function initializeApp() {
+    if (!supabaseReady) {
+        currentUser = null;
+        updateAccountUI();
+        await loadProperties();
+        return;
+    }
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+        currentUser = session?.user ?? null;
+        updateAccountUI();
+    });
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+        setStatus(authStatus, `Impossible de vérifier la session : ${error.message}`, true);
+    } else {
+        currentUser = data.session?.user ?? null;
+    }
+    updateAccountUI();
+    await loadProperties();
+}
+
+initializeApp();
+})();

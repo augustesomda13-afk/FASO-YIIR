@@ -70,7 +70,32 @@
         <!-- Formulaire d'ajout d'une annonce -->
         <section id="publier" class="bg-white p-6 rounded-xl shadow-md h-fit border border-gray-200">
             <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-circle-plus text-emerald-600 mr-2"></i> Publier un bien</h2>
-            <form id="propertyForm" class="space-y-4">
+            <div id="backendStatus" class="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800" role="status" aria-live="polite"></div>
+            <div id="accountPanel" class="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <form id="authForm" class="space-y-3">
+                    <p class="text-sm text-gray-600">Connectez-vous ou créez un compte pour publier une annonce.</p>
+                    <div>
+                        <label for="accountEmail" class="block text-sm font-medium text-gray-700">Adresse e-mail</label>
+                        <input type="email" id="accountEmail" autocomplete="email" required class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label for="accountPassword" class="block text-sm font-medium text-gray-700">Mot de passe (8 caractères minimum)</label>
+                        <input type="password" id="accountPassword" autocomplete="current-password" minlength="8" required class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                    </div>
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        <button type="submit" name="mode" value="login" class="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-800">Se connecter</button>
+                        <button type="submit" name="mode" value="signup" class="rounded-lg border border-emerald-700 px-3 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-50">Créer un compte</button>
+                    </div>
+                    <p id="authStatus" class="text-sm text-gray-600" role="status" aria-live="polite"></p>
+                </form>
+                <div id="signedInPanel" class="hidden items-center justify-between gap-3">
+                    <p id="signedInAs" class="break-all text-sm text-gray-700"></p>
+                    <button id="signOutButton" type="button" class="shrink-0 rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-white">Déconnexion</button>
+                </div>
+            </div>
+            <p id="publishAccess" class="mb-4 text-sm text-gray-600">Connectez-vous pour publier une annonce.</p>
+            <p id="propertyStatus" class="mb-4 text-sm text-gray-700" role="status" aria-live="polite"></p>
+            <form id="propertyForm" class="hidden space-y-4">
                 <div>
                     <label for="title" class="block text-sm font-medium text-gray-700">Titre de l’annonce</label>
                     <input type="text" id="title" required maxlength="100" placeholder="Ex: Belle villa meublée" class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
@@ -160,6 +185,8 @@
     </footer>
 
     <!-- Lien vers votre fichier JavaScript externe -->
+    <script src="supabase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
 </body>
 </html>

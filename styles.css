@@ -112,6 +112,32 @@ img {
     transform: translateY(-1px);
 }
 
+#authForm input,
+#propertyForm input,
+#propertyForm select {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#authForm input:focus,
+#propertyForm input:focus,
+#propertyForm select:focus {
+    outline: none;
+    border-color: var(--green-600);
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.14);
+}
+
+#authForm button:disabled,
+#propertyForm button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+#backendStatus:empty,
+#authStatus:empty,
+#propertyStatus:empty {
+    display: none;
+}
+
 @media (max-width: 768px) {
     .tete .container {
         flex-wrap: wrap;
