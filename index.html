@@ -72,9 +72,13 @@
             <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-circle-plus text-emerald-600 mr-2"></i> Publier un bien</h2>
             <form id="propertyForm" class="space-y-4">
                 <div>
-    <label class="block text-sm font-medium text-gray-700">Photo de la maison</label>
-    <input type="file" id="imageFile" accept="image/*" required class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
-</div>
+                    <label for="title" class="block text-sm font-medium text-gray-700">Titre de l’annonce</label>
+                    <input type="text" id="title" required maxlength="100" placeholder="Ex: Belle villa meublée" class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                </div>
+                <div>
+                    <label for="imageFile" class="block text-sm font-medium text-gray-700">Photo du logement (facultative si vous fournissez un lien)</label>
+                    <input type="file" id="imageFile" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Type de bien</label>
                     <select id="type" class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
@@ -93,8 +97,8 @@
                     <input type="number" id="price" required placeholder="Ex: 75000" class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Lien de l'image (URL)</label>
-                    <input type="url" id="image" required placeholder="https://images.unsplash.com/..." class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                    <label for="image" class="block text-sm font-medium text-gray-700">Lien de l’image (URL, facultatif si vous ajoutez une photo)</label>
+                    <input type="url" id="image" placeholder="https://exemple.com/photo.jpg" class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Téléphone de contact</label>

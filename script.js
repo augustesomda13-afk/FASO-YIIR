@@ -113,30 +113,59 @@ paymentForm.addEventListener('submit', function(e) {
 // Ajouter un bien avec gestion de l'image locale
 propertyForm.addEventListener('submit', function(e) {
     e.preventDefault();
-    
+
     const imageInput = document.getElementById('imageFile');
     const file = imageInput.files[0];
+    const imageUrl = document.getElementById('image').value.trim();
 
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const newProp = {
-                id: Date.now(),
-                title: document.getElementById('title').value,
-                type: document.getElementById('type').value,
-                location: document.getElementById('location').value,
-                price: document.getElementById('price').value,
-                image: event.target.result, // Convertit l'image en données stockables
-                contact: document.getElementById('contact').value
-            };
-
-            properties.unshift(newProp);
-            localStorage.setItem('burkina_properties', JSON.stringify(properties));
-            propertyForm.reset();
-            filterAndRender();
-        };
-        reader.readAsDataURL(file);
+    if (!file && !imageUrl) {
+        alert('Ajoutez une photo ou renseignez le lien de la photo.');
+        return;
     }
+
+    const addProperty = image => {
+        const newProp = {
+            id: Date.now(),
+            title: document.getElementById('title').value.trim(),
+            type: document.getElementById('type').value,
+            location: document.getElementById('location').value.trim(),
+            price: Number(document.getElementById('price').value),
+            image,
+            contact: document.getElementById('contact').value.trim()
+        };
+
+        const updatedProperties = [newProp, ...properties];
+        try {
+            localStorage.setItem('burkina_properties', JSON.stringify(updatedProperties));
+        } catch (error) {
+            console.error('Impossible d’enregistrer cette annonce dans le navigateur.', error);
+            alert('L’annonce n’a pas pu être enregistrée dans ce navigateur. Essayez avec un lien de photo au lieu d’un fichier volumineux.');
+            return;
+        }
+
+        properties = updatedProperties;
+        propertyForm.reset();
+        filterAndRender();
+        alert('Annonce ajoutée. Elle est enregistrée dans ce navigateur.');
+    };
+
+    if (!file) {
+        addProperty(imageUrl);
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function() {
+        if (typeof reader.result !== 'string') {
+            alert('La photo n’a pas pu être lue. Réessayez ou utilisez un lien de photo.');
+            return;
+        }
+        addProperty(reader.result);
+    };
+    reader.onerror = function() {
+        alert('La photo n’a pas pu être lue. Réessayez ou utilisez un lien de photo.');
+    };
+    reader.readAsDataURL(file);
 });
 
 // Supprimer un bien
