@@ -1,0 +1,138 @@
+/* Styles personnalisés pour FASO YIIR */
+:root {
+    --green-800: #065f46;
+    --green-700: #047857;
+    --green-600: #059669;
+    --green-50: #ecfdf5;
+    --slate-900: #111827;
+    --slate-700: #374151;
+    --slate-500: #6b7280;
+    --white: #ffffff;
+    --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.12);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(180deg, #f4fdf8 0%, #eef6f1 100%);
+    color: var(--slate-900);
+}
+
+img {
+    display: block;
+    max-width: 100%;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.tete {
+    background: linear-gradient(135deg, rgba(6, 95, 70, 0.98), rgba(4, 120, 87, 0.96));
+    color: var(--white);
+    box-shadow: 0 8px 30px rgba(6, 95, 70, 0.18);
+}
+
+.tete .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.tete .flex {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+
+.tete .text {
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+.tete nav a {
+    color: rgba(255, 255, 255, 0.86);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+.tete nav a:hover,
+.tete nav a:focus-visible {
+    color: var(--white);
+}
+
+.corps {
+    min-height: 100vh;
+}
+
+::selection {
+    background: rgba(5, 150, 105, 0.24);
+    color: var(--slate-900);
+}
+
+/* Animation d'apparition douce pour la fenêtre modale */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+#bookingModal {
+    backdrop-filter: blur(2px);
+}
+
+#bookingModal:not(.hidden) > div {
+    animation: fadeIn 0.25s ease-out forwards;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+#bookingModal .text-gray-400,
+#bookingModal .text-gray-600 {
+    transition: color 0.2s ease;
+}
+
+#bookingModal button:hover {
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .tete .container {
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .tete nav {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

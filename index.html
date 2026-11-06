@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FASO-YIIR - Louez votre maison plus facillement au Burkina Faso</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Lien vers votre fichier CSS externe -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="corps">
+
+    <!-- En-tête -->
+    <header class="tete">
+        <div class="container">
+            <div class="flex">
+                <i class="fa-solid fa-house-chimney text-2xl"></i>
+                <span class="text">FASO-YIIR</span>
+            </div>
+            <nav class="hidden md:flex space-x-6 text-sm">
+                <a href="#" class="Acceuil">Accueil</a>
+                <a href="#catalogue" class="catalogue">Trouvez un logement</a>
+                <a href="#publier" class="publication">Publiez une annonce</a>
+            </nav>
+            <span class="text-xs bg-emerald-800 px-3 py-1 rounded-full font-medium">🇧🇫 Faso Edition</span>
+        </div>
+    </header>
+
+    <!-- Bannière de recherche principale -->
+    <section class="bg-emerald-600 text-white py-12 px-6 text-center">
+        <div class="max-w-3xl mx-auto">
+            <h1 class="text-3xl md:text-4xl font-extrabold mb-4">Trouvez votre prochaine maison ou villa au Burkina Faso</h1>
+            <p class="text-emerald-100 mb-8">Louez facilement à Ouagadougou, Bobo-Dioulasso et réservez en ligne par Mobile Money.</p>
+            
+            <div class="bg-white p-4 rounded-xl shadow-md flex flex-col md:flex-row gap-3">
+                <input type="text" id="searchInput" placeholder="Rechercher par quartier (ex: Ouaga 2000...)" class="flex-grow p-3 rounded-lg border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                <select id="filterType" class="p-3 rounded-lg border border-gray-300 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <option value="">Tous les types</option>
+                    <option value="Villa">Villa</option>
+                    <option value="Appartement">Appartement</option>
+                    <option value="Chambre salon">Chambre salon</option>
+                    <option value="Cité">Cité</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contenu Principal -->
+    <main class="container mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Liste des Annonces -->
+        <section id="catalogue" class="lg:col-span-2">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800"><i class="fa-solid fa-list mr-2 text-emerald-600"></i> Logements disponibles</h2>
+                <span id="counter" class="text-sm text-gray-500 font-medium"></span>
+            </div>
+
+            <!-- Grille des cartes de maisons -->
+            <div id="propertyGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+
+            <div id="emptyState" class="text-center py-16 text-gray-400 hidden bg-white rounded-xl shadow-sm border border-gray-200">
+                <i class="fa-solid fa-house-circle-xmark text-5xl mb-3"></i>
+                <p class="text-lg">Aucun logement ne correspond à votre recherche.</p>
+            </div>
+        </section>
+
+        <!-- Formulaire d'ajout d'une annonce -->
+        <section id="publier" class="bg-white p-6 rounded-xl shadow-md h-fit border border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-circle-plus text-emerald-600 mr-2"></i> Publier un bien</h2>
+            <form id="propertyForm" class="space-y-4">
+                <div>
+    <label class="block text-sm font-medium text-gray-700">Photo de la maison</label>
+    <input type="file" id="imageFile" accept="image/*" required class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+</div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Type de bien</label>
+                    <select id="type" class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                        <option value="Villa">Villa</option>
+                        <option value="Appartement">Appartement</option>
+                        <option value="Chambre salon">Chambre salon</option>
+                        <option value="Cité">Cité</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Ville / Quartier</label>
+                    <input type="text" id="location" required placeholder="Ex: Ouagadougou, Ouaga 2000" class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Prix par mois (FCFA)</label>
+                    <input type="number" id="price" required placeholder="Ex: 75000" class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Lien de l'image (URL)</label>
+                    <input type="url" id="image" required placeholder="https://images.unsplash.com/..." class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Téléphone de contact</label>
+                    <input type="tel" id="contact" required placeholder="+226 XX XX XX XX" class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-emerald-700 transition duration-200 shadow-sm text-sm">
+                    Mettre en ligne l'annonce
+                </button>
+            </form>
+        </section>
+    </main>
+
+    <!-- Fenêtre Modale de Réservation et Paiement Mobile -->
+    <div id="bookingModal" class="fixed inset-0 bg-black/50 hidden flex justify-center items-center z-50 px-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl relative">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="text-center mb-6">
+                <div class="bg-emerald-100 text-emerald-700 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+                    <i class="fa-solid fa-credit-card"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800">Réservation & Paiement</h3>
+                <p id="modalPropertyTitle" class="text-sm text-gray-500 mt-1"></p>
+            </div>
+
+            <form id="paymentForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Montant à régler (FCFA)</label>
+                    <input type="text" id="modalPrice" readonly class="w-full bg-gray-100 rounded-lg p-2.5 font-bold text-emerald-700 text-sm border border-gray-300">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Choisissez votre opérateur</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="border rounded-lg p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-emerald-500 transition">
+                            <input type="radio" name="operator" value="Orange Money" required class="text-emerald-600">
+                            <span class="text-sm font-semibold text-orange-600">Orange Money</span>
+                        </label>
+                        <label class="border rounded-lg p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-emerald-500 transition">
+                            <input type="radio" name="operator" value="Moov Money" required class="text-emerald-600">
+                            <span class="text-sm font-semibold text-blue-600">Moov Money</span>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Numéro de téléphone (Burkina Faso)</label>
+                    <input type="tel" id="payerPhone" required placeholder="+226 XX XX XX XX" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-emerald-700 transition shadow-md text-sm">
+                    Confirmer le paiement
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pied de page -->
+    <footer class="bg-gray-800 text-white py-6 text-center text-sm mt-12">
+        <p>&copy; 2026 FASO YIIR - Conçu pour dynamiser l'immobilier au Burkina Faso.</p>
+    </footer>
+
+    <!-- Lien vers votre fichier JavaScript externe -->
+    <script src="script.js"></script>
+</body>
+</html>
