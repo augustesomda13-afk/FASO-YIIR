@@ -1,5 +1,13 @@
 (() => {
 const propertyGrid = document.getElementById('propertyGrid');
+const myPropertiesPanel = document.getElementById('myProperties');
+const myPropertiesLink = document.getElementById('myPropertiesLink');
+const myPropertyList = document.getElementById('myPropertyList');
+const myPropertiesCounter = document.getElementById('myPropertiesCounter');
+const myPropertiesEmpty = document.getElementById('myPropertiesEmpty');
+const editPropertyPanel = document.getElementById('editPropertyPanel');
+const editPropertyForm = document.getElementById('editPropertyForm');
+const editPropertyStatus = document.getElementById('editPropertyStatus');
 const propertyForm = document.getElementById('propertyForm');
 const searchInput = document.getElementById('searchInput');
 const filterType = document.getElementById('filterType');
@@ -53,6 +61,7 @@ const supabase = supabaseReady
 let properties = [];
 let currentUser = null;
 let selectedProperty = null;
+let editingPropertyId = null;
 
 function setStatus(element, message, isError = false) {
     element.textContent = message;
@@ -66,6 +75,48 @@ function isAdmin() {
 
 function canDeleteProperty(property) {
     return isAdmin() || (currentUser && property.created_by === currentUser.id);
+}
+
+function renderMyProperties() {
+    myPropertyList.replaceChildren();
+    const ownProperties = currentUser
+        ? properties.filter(property => property.created_by === currentUser.id)
+        : [];
+
+    myPropertiesCounter.textContent = `${ownProperties.length} annonce(s)`;
+    myPropertiesEmpty.classList.toggle('hidden', ownProperties.length !== 0);
+
+    ownProperties.forEach(property => {
+        const item = document.createElement('article');
+        item.className = 'my-property-item';
+
+        const details = document.createElement('div');
+        details.className = 'my-property-details';
+        const title = document.createElement('h3');
+        title.className = 'my-property-title';
+        title.textContent = property.title;
+        const summary = document.createElement('p');
+        summary.className = 'my-property-summary';
+        summary.textContent = `${property.type} · ${property.location} · ${Number(property.price).toLocaleString()} FCFA / mois`;
+        details.append(title, summary);
+
+        const actions = document.createElement('div');
+        actions.className = 'my-property-actions';
+        const editButton = document.createElement('button');
+        editButton.type = 'button';
+        editButton.className = 'button button-secondary';
+        editButton.textContent = 'Modifier';
+        editButton.addEventListener('click', () => window.editProperty(property.id));
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'button delete-button';
+        deleteButton.textContent = 'Supprimer';
+        deleteButton.addEventListener('click', () => window.deleteProperty(property.id));
+        actions.append(editButton, deleteButton);
+
+        item.append(details, actions);
+        myPropertyList.append(item);
+    });
 }
 
 function renderProperties(data = properties) {
@@ -145,6 +196,8 @@ function updateAccountUI() {
     authForm.classList.toggle('hidden', signedIn || !supabaseReady);
     signedInPanel.classList.toggle('hidden', !signedIn);
     propertyForm.classList.toggle('hidden', !signedIn || !supabaseReady);
+    myPropertiesPanel.classList.toggle('hidden', !signedIn || !supabaseReady);
+    myPropertiesLink.classList.toggle('hidden', !signedIn || !supabaseReady);
     publishAccess.classList.toggle('hidden', signedIn && supabaseReady);
     if (signedIn) {
         signedInAs.textContent = `Connecté : ${currentUser.email}`;
@@ -152,6 +205,7 @@ function updateAccountUI() {
         publishAccess.textContent = 'Connectez-vous ou créez un compte pour publier une annonce.';
     }
     renderProperties();
+    renderMyProperties();
 }
 
 async function loadProperties() {
@@ -173,12 +227,42 @@ async function loadProperties() {
     if (error) {
         properties = defaultProperties;
         renderProperties();
+        renderMyProperties();
         setStatus(backendStatus, `La base partagée n’est pas encore prête (${error.message}). Le catalogue de démonstration reste affiché.`, true);
         return;
     }
 
     properties = data;
     renderProperties();
+    renderMyProperties();
+}
+
+window.editProperty = function(id) {
+    const property = properties.find(item => item.id === id);
+    if (!property || !currentUser || property.created_by !== currentUser.id) {
+        return;
+    }
+
+    editingPropertyId = property.id;
+    editPropertyForm.elements.title.value = property.title;
+    editPropertyForm.elements.type.value = property.type;
+    editPropertyForm.elements.location.value = property.location;
+    editPropertyForm.elements.price.value = property.price;
+    editPropertyForm.elements.image.value = property.image;
+    editPropertyForm.elements.contact.value = property.contact;
+    editPropertyPanel.classList.remove('hidden');
+    editPropertyStatus.textContent = '';
+    editPropertyPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    editPropertyForm.elements.title.focus({ preventScroll: true });
+};
+
+function cancelPropertyEdit(clearStatus = true) {
+    editingPropertyId = null;
+    editPropertyForm.reset();
+    editPropertyPanel.classList.add('hidden');
+    if (clearStatus) {
+        editPropertyStatus.textContent = '';
+    }
 }
 
 function filterAndRender() {
@@ -332,6 +416,65 @@ propertyForm.addEventListener('submit', async function(event) {
     await loadProperties();
 });
 
+editPropertyForm.addEventListener('submit', async function(event) {
+    event.preventDefault();
+    const property = properties.find(item => item.id === editingPropertyId);
+    if (!supabaseReady || !currentUser || !property || property.created_by !== currentUser.id) {
+        setStatus(editPropertyStatus, 'Vous ne pouvez modifier que vos propres annonces.', true);
+        return;
+    }
+
+    const submitButton = editPropertyForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    setStatus(editPropertyStatus, 'Modification en cours…');
+    const imageUrl = editPropertyForm.elements.image.value.trim();
+    try {
+        const parsedImageUrl = new URL(imageUrl);
+        if (parsedImageUrl.protocol !== 'https:' && parsedImageUrl.protocol !== 'http:') {
+            throw new Error('URL non autorisée');
+        }
+    } catch {
+        setStatus(editPropertyStatus, 'Le lien de la photo doit être une adresse HTTP ou HTTPS valide.', true);
+        submitButton.disabled = false;
+        return;
+    }
+
+    const updates = {
+        title: editPropertyForm.elements.title.value.trim(),
+        type: editPropertyForm.elements.type.value,
+        location: editPropertyForm.elements.location.value.trim(),
+        price: Number(editPropertyForm.elements.price.value),
+        image: imageUrl,
+        contact: editPropertyForm.elements.contact.value.trim()
+    };
+    const { data, error } = await supabase
+        .from('properties')
+        .update(updates)
+        .eq('id', editingPropertyId)
+        .eq('created_by', currentUser.id)
+        .select('id')
+        .maybeSingle();
+
+    if (error || !data) {
+        setStatus(
+            editPropertyStatus,
+            error
+                ? `La modification a échoué : ${error.message}`
+                : 'Aucune annonce modifiée. Vérifiez que vous êtes propriétaire et que la règle SQL de modification est appliquée.',
+            true
+        );
+        submitButton.disabled = false;
+        return;
+    }
+
+    cancelPropertyEdit(false);
+    setStatus(editPropertyStatus, 'Annonce modifiée.');
+    submitButton.disabled = false;
+    await loadProperties();
+});
+
+document.getElementById('cancelEditButton').addEventListener('click', cancelPropertyEdit);
+
 window.deleteProperty = async function(id) {
     const property = properties.find(item => item.id === id);
     if (!property || !canDeleteProperty(property) || !confirm('Voulez-vous supprimer cette annonce ?')) {
@@ -342,6 +485,9 @@ window.deleteProperty = async function(id) {
     if (error) {
         setStatus(propertyStatus, `La suppression a échoué : ${error.message}`, true);
         return;
+    }
+    if (editingPropertyId === id) {
+        cancelPropertyEdit();
     }
     await loadProperties();
 };

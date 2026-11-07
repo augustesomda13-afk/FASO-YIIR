@@ -388,6 +388,58 @@ a {
     margin-bottom: 0;
 }
 
+.my-properties {
+    margin-top: 40px;
+}
+
+.my-property-list {
+    display: grid;
+    gap: 12px;
+}
+
+.my-property-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--white);
+}
+
+.my-property-details {
+    min-width: 0;
+}
+
+.my-property-title {
+    margin: 0 0 5px;
+    font-size: 16px;
+}
+
+.my-property-summary {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.my-property-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 8px;
+}
+
+.edit-property-panel {
+    display: grid;
+    gap: 16px;
+    margin-top: 18px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #f8faf9;
+}
+
 .publish-panel {
     align-self: start;
     padding: 22px;
@@ -682,6 +734,15 @@ a {
 
     .property-grid {
         grid-template-columns: 1fr;
+    }
+
+    .my-property-item {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .my-property-actions .button {
+        flex: 1;
     }
 
     .publish-panel {

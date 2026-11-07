@@ -23,6 +23,13 @@ create policy "Authenticated users can publish properties"
     to authenticated
     with check (auth.uid() = created_by);
 
+drop policy if exists "Owners can update properties" on public.properties;
+create policy "Owners can update properties"
+    on public.properties for update
+    to authenticated
+    using (auth.uid() = created_by)
+    with check (auth.uid() = created_by);
+
 drop policy if exists "Admins can delete properties" on public.properties;
 drop policy if exists "Owners and admins can delete properties" on public.properties;
 create policy "Owners and admins can delete properties"

@@ -17,6 +17,7 @@
             <nav class="nav" aria-label="Navigation principale">
                 <a class="nav-link" href="#catalogue">Trouver un logement</a>
                 <a class="nav-link" href="#publier">Publier une annonce</a>
+                <a class="nav-link hidden" id="myPropertiesLink" href="#myProperties">Mes annonces</a>
             </nav>
             <a class="button button-outline header-account" href="#authForm">Connexion / Inscription</a>
             <span class="edition">🇧🇫 Faso Edition</span>
@@ -52,6 +53,55 @@
                 <i class="fa-solid fa-house-circle-xmark" aria-hidden="true"></i>
                 <p>Aucun logement ne correspond à votre recherche.</p>
             </div>
+            <section class="my-properties hidden" id="myProperties" aria-labelledby="myPropertiesTitle">
+                <div class="section-heading">
+                    <h2 class="section-title" id="myPropertiesTitle"><i class="fa-solid fa-house-user" aria-hidden="true"></i> Mes annonces</h2>
+                    <span class="counter" id="myPropertiesCounter"></span>
+                </div>
+                <p class="status" id="editPropertyStatus" role="status" aria-live="polite"></p>
+                <div class="my-property-list" id="myPropertyList"></div>
+                <div class="empty-state hidden" id="myPropertiesEmpty">
+                    <p>Vous n’avez pas encore publié d’annonce.</p>
+                </div>
+                <div class="edit-property-panel hidden" id="editPropertyPanel">
+                    <h3 class="form-title">Modifier mon annonce</h3>
+                    <form class="form-stack" id="editPropertyForm">
+                        <div class="form-field">
+                            <label class="field-label" for="editTitle">Titre de l’annonce</label>
+                            <input class="field" type="text" id="editTitle" name="title" required maxlength="100">
+                        </div>
+                        <div class="form-field">
+                            <label class="field-label" for="editType">Type de bien</label>
+                            <select class="field" id="editType" name="type" required>
+                                <option value="Villa">Villa</option>
+                                <option value="Appartement">Appartement</option>
+                                <option value="Chambre salon">Chambre salon</option>
+                                <option value="Cité">Cité</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label class="field-label" for="editLocation">Ville / Quartier</label>
+                            <input class="field" type="text" id="editLocation" name="location" required maxlength="200">
+                        </div>
+                        <div class="form-field">
+                            <label class="field-label" for="editPrice">Prix par mois (FCFA)</label>
+                            <input class="field" type="number" id="editPrice" name="price" min="1" required>
+                        </div>
+                        <div class="form-field">
+                            <label class="field-label" for="editImage">Lien de la photo</label>
+                            <input class="field" type="url" id="editImage" name="image" required>
+                        </div>
+                        <div class="form-field">
+                            <label class="field-label" for="editContact">Téléphone de contact</label>
+                            <input class="field" type="tel" id="editContact" name="contact" required maxlength="40">
+                        </div>
+                        <div class="button-row">
+                            <button class="button button-primary" type="submit">Enregistrer</button>
+                            <button class="button button-secondary" id="cancelEditButton" type="button">Annuler</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
         </section>
 
         <section class="publish-panel" id="publier">
