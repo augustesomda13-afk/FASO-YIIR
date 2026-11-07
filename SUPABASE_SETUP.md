@@ -15,11 +15,11 @@ Supabase fournit la base PostgreSQL, l’authentification et l’API utilisée p
 - Dans **Authentication → URL Configuration**, ajoute `https://augustesomda13-afk.github.io` aux URL autorisées et définis `https://augustesomda13-afk.github.io/FASO-YIIR/` comme URL de redirection du site.
 - Les visiteurs doivent confirmer leur adresse e-mail si la confirmation est activée dans les réglages d’authentification.
 - La création de compte est ouverte, mais la publication requiert une session confirmée.
-- Pour donner les droits d’administrateur, ouvre **Authentication → Users**, sélectionne ton compte, puis définis dans ses **app metadata** : `{"role":"admin"}`. Ne mets pas ce rôle dans les métadonnées modifiables par l’utilisateur (`user_metadata`). Déconnecte-toi puis reconnecte-toi pour renouveler la session.
-- Seul un compte portant ce rôle peut supprimer des annonces. La règle est appliquée par PostgreSQL, pas seulement par l’interface.
+- Chaque utilisateur connecté peut supprimer ses propres annonces. Un compte administrateur portant le rôle `admin` dans ses **app metadata** peut supprimer toutes les annonces. Ne mets pas ce rôle dans les métadonnées modifiables par l’utilisateur (`user_metadata`).
+- Pour appliquer les nouvelles règles à un projet déjà configuré, exécute à nouveau `supabase/schema.sql` dans le SQL Editor Supabase. Les politiques sont recréées sans supprimer les annonces.
 
 ## Données et photos
 
-Les annonces sont publiques en lecture. Les utilisateurs authentifiés peuvent ajouter une annonce ; seul l’administrateur peut la supprimer. Les photos téléversées vont dans le bucket public `property-images`, avec une limite de 5 Mo. Les règles de stockage limitent l’envoi au dossier de l’utilisateur connecté.
+Les annonces sont publiques en lecture. Les utilisateurs authentifiés peuvent ajouter une annonce et supprimer uniquement celles dont ils sont propriétaires ; les administrateurs peuvent supprimer toutes les annonces. Les photos téléversées vont dans le bucket public `property-images`, avec une limite de 5 Mo. Les utilisateurs peuvent supprimer leurs propres photos ; les administrateurs peuvent supprimer toutes les photos.
 
 Si l’URL ou la clé publique n’est pas configurée, le site affiche les annonces de démonstration et désactive la publication. Les annonces ajoutées avant ce branchement dans le `localStorage` d’un navigateur ne sont pas migrées automatiquement.

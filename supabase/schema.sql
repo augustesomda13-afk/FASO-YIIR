@@ -24,10 +24,14 @@ create policy "Authenticated users can publish properties"
     with check (auth.uid() = created_by);
 
 drop policy if exists "Admins can delete properties" on public.properties;
-create policy "Admins can delete properties"
+drop policy if exists "Owners and admins can delete properties" on public.properties;
+create policy "Owners and admins can delete properties"
     on public.properties for delete
     to authenticated
-    using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+    using (
+        auth.uid() = created_by
+        or (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+    );
 
 insert into public.properties (title, type, location, price, image, contact)
 select 'Belle villa meublée', 'Villa', 'Ouaga 2000, Ouagadougou', 250000,
@@ -69,10 +73,14 @@ create policy "Users can upload their own property images"
     );
 
 drop policy if exists "Admins can delete property images" on storage.objects;
-create policy "Admins can delete property images"
+drop policy if exists "Owners and admins can delete property images" on storage.objects;
+create policy "Owners and admins can delete property images"
     on storage.objects for delete
     to authenticated
     using (
         bucket_id = 'property-images'
-        and (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+        and (
+            (storage.foldername(name))[1] = auth.uid()::text
+            or (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+        )
     );

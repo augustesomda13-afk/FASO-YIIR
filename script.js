@@ -64,6 +64,10 @@ function isAdmin() {
     return currentUser?.app_metadata?.role === 'admin';
 }
 
+function canDeleteProperty(property) {
+    return isAdmin() || (currentUser && property.created_by === currentUser.id);
+}
+
 function renderProperties(data = properties) {
     propertyGrid.replaceChildren();
     counter.textContent = `${data.length} bien(s) trouvé(s)`;
@@ -121,7 +125,7 @@ function renderProperties(data = properties) {
         callLink.textContent = 'Appeler';
         secondaryActions.append(callLink);
 
-        if (isAdmin()) {
+        if (canDeleteProperty(property)) {
             const deleteButton = document.createElement('button');
             deleteButton.type = 'button';
             deleteButton.className = 'button delete-button';
@@ -163,7 +167,7 @@ async function loadProperties() {
     backendStatus.textContent = '';
     const { data, error } = await supabase
         .from('properties')
-        .select('id, title, type, location, price, image, contact')
+        .select('id, title, type, location, price, image, contact, created_by')
         .order('created_at', { ascending: false });
 
     if (error) {
@@ -329,7 +333,8 @@ propertyForm.addEventListener('submit', async function(event) {
 });
 
 window.deleteProperty = async function(id) {
-    if (!isAdmin() || !confirm('Voulez-vous supprimer cette annonce ?')) {
+    const property = properties.find(item => item.id === id);
+    if (!property || !canDeleteProperty(property) || !confirm('Voulez-vous supprimer cette annonce ?')) {
         return;
     }
 
