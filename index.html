@@ -3,44 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FASO-YIIR - Louez votre maison plus facillement au Burkina Faso</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- FontAwesome pour les icônes -->
+    <title>FASO-YIIR - Louez votre maison au Burkina Faso</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Lien vers votre fichier CSS externe -->
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="corps">
-
-    <!-- En-tête -->
-    <header class="tete">
-        <div class="container">
-            <div class="flex">
-                <i class="fa-solid fa-house-chimney text-2xl"></i>
-                <span class="text">FASO-YIIR</span>
-            </div>
-            <nav class="hidden md:flex space-x-6 text-sm">
-                <a href="#" class="Acceuil">Accueil</a>
-                <a href="#catalogue" class="catalogue">Trouvez un logement</a>
-                <a href="#publier" class="publication">Publiez une annonce</a>
-            </nav>
-            <a href="#authForm" class="rounded-lg border border-white/70 px-3 py-2 text-sm font-semibold text-white transition hover:bg-white hover:text-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
-                Connexion / Inscription
+<body class="site">
+    <header class="header">
+        <div class="header-inner">
+            <a class="brand" href="#" aria-label="FASO-YIIR, accueil">
+                <i class="fa-solid fa-house-chimney" aria-hidden="true"></i>
+                <span>FASO-YIIR</span>
             </a>
-            <span class="text-xs bg-emerald-800 px-3 py-1 rounded-full font-medium">🇧🇫 Faso Edition</span>
+            <nav class="nav" aria-label="Navigation principale">
+                <a class="nav-link" href="#catalogue">Trouver un logement</a>
+                <a class="nav-link" href="#publier">Publier une annonce</a>
+            </nav>
+            <a class="button button-outline header-account" href="#authForm">Connexion / Inscription</a>
+            <span class="edition">🇧🇫 Faso Edition</span>
         </div>
     </header>
 
-    <!-- Bannière de recherche principale -->
-    <section class="bg-emerald-600 text-white py-12 px-6 text-center">
-        <div class="max-w-3xl mx-auto">
-            <h1 class="text-3xl md:text-4xl font-extrabold mb-4">Trouvez votre prochaine maison ou villa au Burkina Faso</h1>
-            <p class="text-emerald-100 mb-8">Louez facilement à Ouagadougou, Bobo-Dioulasso et réservez en ligne par Mobile Money.</p>
-            
-            <div class="bg-white p-4 rounded-xl shadow-md flex flex-col md:flex-row gap-3">
-                <input type="text" id="searchInput" placeholder="Rechercher par quartier (ex: Ouaga 2000...)" class="flex-grow p-3 rounded-lg border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
-                <select id="filterType" class="p-3 rounded-lg border border-gray-300 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+    <section class="hero">
+        <div class="hero-inner">
+            <h1 class="hero-title">Trouvez votre prochaine maison ou villa au Burkina Faso</h1>
+            <p class="hero-text">Louez facilement à Ouagadougou, Bobo-Dioulasso et réservez en ligne par Mobile Money.</p>
+            <div class="search-box">
+                <input class="field search-field" type="search" id="searchInput" placeholder="Rechercher par quartier (ex: Ouaga 2000...)" aria-label="Rechercher un logement">
+                <select class="field search-type" id="filterType" aria-label="Filtrer par type">
                     <option value="">Tous les types</option>
                     <option value="Villa">Villa</option>
                     <option value="Appartement">Appartement</option>
@@ -48,150 +37,125 @@
                     <option value="Cité">Cité</option>
                 </select>
             </div>
-            <a href="#authForm" class="mt-5 inline-flex items-center justify-center rounded-lg border border-white px-5 py-3 text-sm font-semibold text-white transition hover:bg-white hover:text-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
-                Se connecter / Créer un compte pour publier
-            </a>
+            <a class="button button-light hero-account" href="#authForm">Se connecter / Créer un compte pour publier</a>
         </div>
     </section>
 
-    <!-- Contenu Principal -->
-    <main class="container mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        <!-- Liste des Annonces -->
-        <section id="catalogue" class="lg:col-span-2">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-800"><i class="fa-solid fa-list mr-2 text-emerald-600"></i> Logements disponibles</h2>
-                <span id="counter" class="text-sm text-gray-500 font-medium"></span>
+    <main class="main-layout">
+        <section class="catalogue" id="catalogue">
+            <div class="section-heading">
+                <h2 class="section-title"><i class="fa-solid fa-list" aria-hidden="true"></i> Logements disponibles</h2>
+                <span class="counter" id="counter"></span>
             </div>
-
-            <!-- Grille des cartes de maisons -->
-            <div id="propertyGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-
-            <div id="emptyState" class="text-center py-16 text-gray-400 hidden bg-white rounded-xl shadow-sm border border-gray-200">
-                <i class="fa-solid fa-house-circle-xmark text-5xl mb-3"></i>
-                <p class="text-lg">Aucun logement ne correspond à votre recherche.</p>
+            <div class="property-grid" id="propertyGrid"></div>
+            <div class="empty-state hidden" id="emptyState">
+                <i class="fa-solid fa-house-circle-xmark" aria-hidden="true"></i>
+                <p>Aucun logement ne correspond à votre recherche.</p>
             </div>
         </section>
 
-        <!-- Formulaire d'ajout d'une annonce -->
-        <section id="publier" class="bg-white p-6 rounded-xl shadow-md h-fit border border-gray-200">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-circle-plus text-emerald-600 mr-2"></i> Publier un bien</h2>
-            <div id="backendStatus" class="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800" role="status" aria-live="polite"></div>
-            <div id="accountPanel" class="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <form id="authForm" class="space-y-3">
-                    <h3 class="font-semibold text-gray-800">Connexion / inscription</h3>
-                    <p class="text-sm text-gray-600">Connectez-vous ou créez un compte pour publier une annonce.</p>
-                    <div>
-                        <label for="accountEmail" class="block text-sm font-medium text-gray-700">Adresse e-mail</label>
-                        <input type="email" id="accountEmail" autocomplete="email" required class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+        <section class="publish-panel" id="publier">
+            <h2 class="section-title"><i class="fa-solid fa-circle-plus" aria-hidden="true"></i> Publier un bien</h2>
+            <div class="status status-info" id="backendStatus" role="status" aria-live="polite"></div>
+
+            <div class="account-panel" id="accountPanel">
+                <form class="form-stack" id="authForm">
+                    <h3 class="form-title">Connexion / inscription</h3>
+                    <p class="helper-text">Connectez-vous ou créez un compte pour publier une annonce.</p>
+                    <div class="form-field">
+                        <label class="field-label" for="accountEmail">Adresse e-mail</label>
+                        <input class="field" type="email" id="accountEmail" autocomplete="email" required>
                     </div>
-                    <div>
-                        <label for="accountPassword" class="block text-sm font-medium text-gray-700">Mot de passe (8 caractères minimum)</label>
-                        <input type="password" id="accountPassword" autocomplete="current-password" minlength="8" required class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                    <div class="form-field">
+                        <label class="field-label" for="accountPassword">Mot de passe (8 caractères minimum)</label>
+                        <input class="field" type="password" id="accountPassword" autocomplete="current-password" minlength="8" required>
                     </div>
-                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        <button type="submit" name="mode" value="login" class="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-800">Se connecter</button>
-                        <button type="submit" name="mode" value="signup" class="rounded-lg border border-emerald-700 px-3 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-50">Créer un compte</button>
+                    <div class="button-row">
+                        <button class="button button-primary" type="submit" name="mode" value="login">Se connecter</button>
+                        <button class="button button-secondary" type="submit" name="mode" value="signup">Créer un compte</button>
                     </div>
-                    <p id="authStatus" class="text-sm text-gray-600" role="status" aria-live="polite"></p>
+                    <p class="status" id="authStatus" role="status" aria-live="polite"></p>
                 </form>
-                <div id="signedInPanel" class="hidden items-center justify-between gap-3">
-                    <p id="signedInAs" class="break-all text-sm text-gray-700"></p>
-                    <button id="signOutButton" type="button" class="shrink-0 rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-white">Déconnexion</button>
+                <div class="signed-in hidden" id="signedInPanel">
+                    <p class="signed-in-text" id="signedInAs"></p>
+                    <button class="button button-secondary" id="signOutButton" type="button">Déconnexion</button>
                 </div>
             </div>
-            <p id="publishAccess" class="mb-4 text-sm text-gray-600">Connectez-vous pour publier une annonce.</p>
-            <p id="propertyStatus" class="mb-4 text-sm text-gray-700" role="status" aria-live="polite"></p>
-            <form id="propertyForm" class="hidden space-y-4">
-                <div>
-                    <label for="title" class="block text-sm font-medium text-gray-700">Titre de l’annonce</label>
-                    <input type="text" id="title" required maxlength="100" placeholder="Ex: Belle villa meublée" class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+
+            <p class="helper-text access-message" id="publishAccess">Connectez-vous pour publier une annonce.</p>
+            <p class="status" id="propertyStatus" role="status" aria-live="polite"></p>
+            <form class="form-stack hidden" id="propertyForm">
+                <div class="form-field">
+                    <label class="field-label" for="title">Titre de l’annonce</label>
+                    <input class="field" type="text" id="title" required maxlength="100" placeholder="Ex: Belle villa meublée">
                 </div>
-                <div>
-                    <label for="imageFile" class="block text-sm font-medium text-gray-700">Photo du logement (facultative si vous fournissez un lien)</label>
-                    <input type="file" id="imageFile" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                <div class="form-field">
+                    <label class="field-label" for="imageFile">Photo du logement (facultative si vous fournissez un lien)</label>
+                    <input class="field file-field" type="file" id="imageFile" accept="image/*">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Type de bien</label>
-                    <select id="type" class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                <div class="form-field">
+                    <label class="field-label" for="type">Type de bien</label>
+                    <select class="field" id="type">
                         <option value="Villa">Villa</option>
                         <option value="Appartement">Appartement</option>
                         <option value="Chambre salon">Chambre salon</option>
                         <option value="Cité">Cité</option>
                     </select>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Ville / Quartier</label>
-                    <input type="text" id="location" required placeholder="Ex: Ouagadougou, Ouaga 2000" class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                <div class="form-field">
+                    <label class="field-label" for="location">Ville / Quartier</label>
+                    <input class="field" type="text" id="location" required placeholder="Ex: Ouagadougou, Ouaga 2000">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Prix par mois (FCFA)</label>
-                    <input type="number" id="price" required placeholder="Ex: 75000" class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                <div class="form-field">
+                    <label class="field-label" for="price">Prix par mois (FCFA)</label>
+                    <input class="field" type="number" id="price" min="1" required placeholder="Ex: 75000">
                 </div>
-                <div>
-                    <label for="image" class="block text-sm font-medium text-gray-700">Lien de l’image (URL, facultatif si vous ajoutez une photo)</label>
-                    <input type="url" id="image" placeholder="https://exemple.com/photo.jpg" class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                <div class="form-field">
+                    <label class="field-label" for="image">Lien de l’image (facultatif si vous ajoutez une photo)</label>
+                    <input class="field" type="url" id="image" placeholder="https://exemple.com/photo.jpg">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Téléphone de contact</label>
-                    <input type="tel" id="contact" required placeholder="+226 XX XX XX XX" class="mt-1 block w-full rounded-md border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                <div class="form-field">
+                    <label class="field-label" for="contact">Téléphone de contact</label>
+                    <input class="field" type="tel" id="contact" required placeholder="+226 XX XX XX XX">
                 </div>
-                <button type="submit" class="w-full bg-emerald-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-emerald-700 transition duration-200 shadow-sm text-sm">
-                    Mettre en ligne l'annonce
-                </button>
+                <button class="button button-primary button-full" type="submit">Mettre en ligne l’annonce</button>
             </form>
         </section>
     </main>
 
-    <!-- Fenêtre Modale de Réservation et Paiement Mobile -->
-    <div id="bookingModal" class="fixed inset-0 bg-black/50 hidden flex justify-center items-center z-50 px-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl relative">
-            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-lg">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            <div class="text-center mb-6">
-                <div class="bg-emerald-100 text-emerald-700 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
-                    <i class="fa-solid fa-credit-card"></i>
-                </div>
-                <h3 class="text-xl font-bold text-gray-800">Réservation & Paiement</h3>
-                <p id="modalPropertyTitle" class="text-sm text-gray-500 mt-1"></p>
+    <div class="modal hidden" id="bookingModal">
+        <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <button class="modal-close" type="button" onclick="closeModal()" aria-label="Fermer"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            <div class="modal-heading">
+                <span class="modal-icon"><i class="fa-solid fa-credit-card" aria-hidden="true"></i></span>
+                <h2 class="modal-title" id="modalTitle">Réservation & Paiement</h2>
+                <p class="helper-text" id="modalPropertyTitle"></p>
             </div>
-
-            <form id="paymentForm" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Montant à régler (FCFA)</label>
-                    <input type="text" id="modalPrice" readonly class="w-full bg-gray-100 rounded-lg p-2.5 font-bold text-emerald-700 text-sm border border-gray-300">
+            <form class="form-stack" id="paymentForm">
+                <div class="form-field">
+                    <label class="field-label" for="modalPrice">Montant à régler (FCFA)</label>
+                    <input class="field price-field" type="text" id="modalPrice" readonly>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Choisissez votre opérateur</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <label class="border rounded-lg p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-emerald-500 transition">
-                            <input type="radio" name="operator" value="Orange Money" required class="text-emerald-600">
-                            <span class="text-sm font-semibold text-orange-600">Orange Money</span>
-                        </label>
-                        <label class="border rounded-lg p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-emerald-500 transition">
-                            <input type="radio" name="operator" value="Moov Money" required class="text-emerald-600">
-                            <span class="text-sm font-semibold text-blue-600">Moov Money</span>
-                        </label>
+                <fieldset class="operator-field">
+                    <legend class="field-label">Choisissez votre opérateur</legend>
+                    <div class="operator-list">
+                        <label class="operator-option"><input type="radio" name="operator" value="Orange Money" required><span class="orange-text">Orange Money</span></label>
+                        <label class="operator-option"><input type="radio" name="operator" value="Moov Money" required><span class="blue-text">Moov Money</span></label>
                     </div>
+                </fieldset>
+                <div class="form-field">
+                    <label class="field-label" for="payerPhone">Numéro de téléphone (Burkina Faso)</label>
+                    <input class="field" type="tel" id="payerPhone" required placeholder="+226 XX XX XX XX">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Numéro de téléphone (Burkina Faso)</label>
-                    <input type="tel" id="payerPhone" required placeholder="+226 XX XX XX XX" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
-                </div>
-                <button type="submit" class="w-full bg-emerald-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-emerald-700 transition shadow-md text-sm">
-                    Confirmer le paiement
-                </button>
+                <button class="button button-primary button-full" type="submit">Confirmer le paiement</button>
             </form>
-        </div>
+        </section>
     </div>
 
-    <!-- Pied de page -->
-    <footer class="bg-gray-800 text-white py-6 text-center text-sm mt-12">
-        <p>&copy; 2026 FASO YIIR - Conçu pour dynamiser l'immobilier au Burkina Faso.</p>
+    <footer class="footer">
+        <p>&copy; 2026 FASO YIIR - Conçu pour dynamiser l’immobilier au Burkina Faso.</p>
     </footer>
 
-    <!-- Lien vers votre fichier JavaScript externe -->
     <script src="supabase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>

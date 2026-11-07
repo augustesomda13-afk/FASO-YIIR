@@ -56,8 +56,8 @@ let selectedProperty = null;
 
 function setStatus(element, message, isError = false) {
     element.textContent = message;
-    element.classList.toggle('text-red-700', isError);
-    element.classList.toggle('text-gray-600', !isError);
+    element.classList.toggle('status-error', isError);
+    element.classList.toggle('status-normal', !isError);
 }
 
 function isAdmin() {
@@ -71,13 +71,12 @@ function renderProperties(data = properties) {
 
     data.forEach(property => {
         const card = document.createElement('article');
-        card.className = 'flex flex-col justify-between overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md';
+        card.className = 'property-card';
 
         const details = document.createElement('div');
         const imageFrame = document.createElement('div');
-        imageFrame.className = 'relative h-48 overflow-hidden bg-gray-200';
+        imageFrame.className = 'property-photo';
         const image = document.createElement('img');
-        image.className = 'h-full w-full object-cover';
         image.alt = property.title;
         try {
             const imageUrl = new URL(property.image);
@@ -88,36 +87,36 @@ function renderProperties(data = properties) {
             image.alt = `${property.title} (photo indisponible)`;
         }
         const type = document.createElement('span');
-        type.className = 'absolute left-3 top-3 rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white shadow';
+        type.className = 'property-type';
         type.textContent = property.type;
         imageFrame.append(image, type);
 
         const text = document.createElement('div');
-        text.className = 'p-5';
+        text.className = 'property-info';
         const title = document.createElement('h3');
-        title.className = 'mb-1 text-lg font-bold text-gray-800';
+        title.className = 'property-title';
         title.textContent = property.title;
         const location = document.createElement('p');
-        location.className = 'mb-3 text-sm text-gray-500';
+        location.className = 'property-location';
         location.textContent = property.location;
         const price = document.createElement('p');
-        price.className = 'mb-4 text-lg font-extrabold text-emerald-700';
+        price.className = 'property-price';
         price.textContent = `${Number(property.price).toLocaleString()} FCFA / mois`;
         text.append(title, location, price);
         details.append(imageFrame, text);
 
         const actions = document.createElement('div');
-        actions.className = 'flex flex-col gap-2 px-5 pb-5';
+        actions.className = 'property-actions';
         const reserveButton = document.createElement('button');
         reserveButton.type = 'button';
-        reserveButton.className = 'w-full rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700';
+        reserveButton.className = 'button button-primary button-full';
         reserveButton.textContent = 'Réserver & Payer';
         reserveButton.addEventListener('click', () => window.openModal(property.id));
 
         const secondaryActions = document.createElement('div');
-        secondaryActions.className = 'flex gap-2';
+        secondaryActions.className = 'property-links';
         const callLink = document.createElement('a');
-        callLink.className = 'flex-1 rounded-lg bg-emerald-50 px-3 py-2 text-center text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100';
+        callLink.className = 'button call-link';
         callLink.href = `tel:${String(property.contact).replace(/[^\d+]/g, '')}`;
         callLink.textContent = 'Appeler';
         secondaryActions.append(callLink);
@@ -125,7 +124,7 @@ function renderProperties(data = properties) {
         if (isAdmin()) {
             const deleteButton = document.createElement('button');
             deleteButton.type = 'button';
-            deleteButton.className = 'rounded-lg p-2 text-sm text-red-600 transition hover:bg-red-50';
+            deleteButton.className = 'button delete-button';
             deleteButton.textContent = 'Supprimer';
             deleteButton.addEventListener('click', () => window.deleteProperty(property.id));
             secondaryActions.append(deleteButton);
@@ -141,7 +140,6 @@ function updateAccountUI() {
     const signedIn = Boolean(currentUser);
     authForm.classList.toggle('hidden', signedIn || !supabaseReady);
     signedInPanel.classList.toggle('hidden', !signedIn);
-    signedInPanel.classList.toggle('flex', signedIn);
     propertyForm.classList.toggle('hidden', !signedIn || !supabaseReady);
     publishAccess.classList.toggle('hidden', signedIn && supabaseReady);
     if (signedIn) {
