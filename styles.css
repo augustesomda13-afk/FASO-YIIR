@@ -230,6 +230,54 @@ a {
     width: 100%;
 }
 
+.ad-slot {
+    position: relative;
+    display: grid;
+    max-width: 1152px;
+    min-height: 132px;
+    place-items: center;
+    margin: 24px auto 0;
+    padding: 28px 48px;
+    border: 1px dashed #a8c9b7;
+    border-radius: 12px;
+    background: linear-gradient(110deg, #f8fcf9, #edf7f1);
+    text-align: center;
+}
+
+.ad-label {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.ad-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: var(--green-dark);
+}
+
+.ad-content > i {
+    font-size: 30px;
+}
+
+.ad-title {
+    margin: 0 0 5px;
+    font-size: 20px;
+}
+
+.ad-text {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
 .main-layout {
     display: grid;
     max-width: 1200px;
@@ -680,6 +728,11 @@ a {
 }
 
 @media (max-width: 900px) {
+    .ad-slot {
+        margin-right: 24px;
+        margin-left: 24px;
+    }
+
     .header-inner {
         flex-wrap: wrap;
         justify-content: center;
@@ -717,6 +770,25 @@ a {
 
     .hero {
         padding: 38px 16px;
+    }
+
+    .ad-slot {
+        min-height: 120px;
+        margin: 16px 16px 0;
+        padding: 28px 18px 20px;
+    }
+
+    .ad-content {
+        gap: 11px;
+        text-align: left;
+    }
+
+    .ad-content > i {
+        font-size: 24px;
+    }
+
+    .ad-title {
+        font-size: 17px;
     }
 
     .search-box {
