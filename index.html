@@ -17,7 +17,7 @@
             <nav class="nav" aria-label="Navigation principale">
                 <a class="nav-link" href="#catalogue">Trouver un logement</a>
                 <a class="nav-link" href="#publier">Publier une annonce</a>
-                <a class="nav-link hidden" id="myPropertiesLink" href="#myProperties">Mes annonces</a>
+                <a class="nav-link" id="myPropertiesLink" href="#myProperties">Mes annonces</a>
             </nav>
             <a class="button button-outline header-account" href="#authForm">Connexion / Inscription</a>
             <span class="edition">🇧🇫 Faso Edition</span>
@@ -53,7 +53,7 @@
                 <i class="fa-solid fa-house-circle-xmark" aria-hidden="true"></i>
                 <p>Aucun logement ne correspond à votre recherche.</p>
             </div>
-            <section class="my-properties hidden" id="myProperties" aria-labelledby="myPropertiesTitle">
+            <section class="my-properties" id="myProperties" aria-labelledby="myPropertiesTitle">
                 <div class="section-heading">
                     <h2 class="section-title" id="myPropertiesTitle"><i class="fa-solid fa-house-user" aria-hidden="true"></i> Mes annonces</h2>
                     <span class="counter" id="myPropertiesCounter"></span>
@@ -61,7 +61,9 @@
                 <p class="status" id="editPropertyStatus" role="status" aria-live="polite"></p>
                 <div class="my-property-list" id="myPropertyList"></div>
                 <div class="empty-state hidden" id="myPropertiesEmpty">
-                    <p>Vous n’avez pas encore publié d’annonce.</p>
+                    <p id="myPropertiesEmptyMessage">Connectez-vous pour consulter et gérer vos annonces.</p>
+                    <a class="button button-primary" id="myPropertiesLoginLink" href="#authForm">Se connecter</a>
+                    <a class="button button-primary hidden" id="myPropertiesPublishLink" href="#publier">Publier une annonce</a>
                 </div>
                 <div class="edit-property-panel hidden" id="editPropertyPanel">
                     <h3 class="form-title">Modifier mon annonce</h3>

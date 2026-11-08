@@ -1,10 +1,11 @@
 (() => {
 const propertyGrid = document.getElementById('propertyGrid');
-const myPropertiesPanel = document.getElementById('myProperties');
-const myPropertiesLink = document.getElementById('myPropertiesLink');
 const myPropertyList = document.getElementById('myPropertyList');
 const myPropertiesCounter = document.getElementById('myPropertiesCounter');
 const myPropertiesEmpty = document.getElementById('myPropertiesEmpty');
+const myPropertiesEmptyMessage = document.getElementById('myPropertiesEmptyMessage');
+const myPropertiesLoginLink = document.getElementById('myPropertiesLoginLink');
+const myPropertiesPublishLink = document.getElementById('myPropertiesPublishLink');
 const editPropertyPanel = document.getElementById('editPropertyPanel');
 const editPropertyForm = document.getElementById('editPropertyForm');
 const editPropertyStatus = document.getElementById('editPropertyStatus');
@@ -85,6 +86,11 @@ function renderMyProperties() {
 
     myPropertiesCounter.textContent = `${ownProperties.length} annonce(s)`;
     myPropertiesEmpty.classList.toggle('hidden', ownProperties.length !== 0);
+    myPropertiesEmptyMessage.textContent = currentUser
+        ? 'Vous n’avez pas encore publié d’annonce.'
+        : 'Connectez-vous pour consulter et gérer vos annonces.';
+    myPropertiesLoginLink.classList.toggle('hidden', Boolean(currentUser));
+    myPropertiesPublishLink.classList.toggle('hidden', !currentUser);
 
     ownProperties.forEach(property => {
         const item = document.createElement('article');
@@ -196,8 +202,6 @@ function updateAccountUI() {
     authForm.classList.toggle('hidden', signedIn || !supabaseReady);
     signedInPanel.classList.toggle('hidden', !signedIn);
     propertyForm.classList.toggle('hidden', !signedIn || !supabaseReady);
-    myPropertiesPanel.classList.toggle('hidden', !signedIn || !supabaseReady);
-    myPropertiesLink.classList.toggle('hidden', !signedIn || !supabaseReady);
     publishAccess.classList.toggle('hidden', signedIn && supabaseReady);
     if (signedIn) {
         signedInAs.textContent = `Connecté : ${currentUser.email}`;
