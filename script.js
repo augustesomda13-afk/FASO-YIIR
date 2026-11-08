@@ -75,10 +75,6 @@ function isAdmin() {
     return currentUser?.app_metadata?.role === 'admin';
 }
 
-function canDeleteProperty(property) {
-    return isAdmin() || (currentUser && property.created_by === currentUser.id);
-}
-
 function renderMyProperties() {
     myPropertyList.replaceChildren();
     const ownProperties = currentUser
@@ -183,7 +179,7 @@ function renderProperties(data = properties) {
         callLink.textContent = 'Appeler';
         secondaryActions.append(callLink);
 
-        if (canDeleteProperty(property)) {
+        if (currentUser) {
             const deleteButton = document.createElement('button');
             deleteButton.type = 'button';
             deleteButton.className = 'button delete-button';
@@ -405,7 +401,8 @@ propertyForm.addEventListener('submit', async function(event) {
         location: document.getElementById('location').value.trim(),
         price: Number(document.getElementById('price').value),
         image: imageUrl,
-        contact: document.getElementById('contact').value.trim()
+        contact: document.getElementById('contact').value.trim(),
+        created_by: currentUser.id
     };
     const { error } = await supabase.from('properties').insert(newProperty);
 
@@ -482,17 +479,19 @@ document.getElementById('cancelEditButton').addEventListener('click', cancelProp
 
 window.deleteProperty = async function(id) {
     const property = properties.find(item => item.id === id);
-    if (!property || !canDeleteProperty(property) || !confirm('Voulez-vous supprimer cette annonce ?')) {
+    if (!property || !currentUser || !confirm('Voulez-vous supprimer cette annonce ?')) {
         return;
     }
 
     setStatus(myPropertiesStatus, 'Suppression en cours…');
-    const { data, error } = await supabase
+    let deleteQuery = supabase
         .from('properties')
         .delete()
-        .eq('id', id)
-        .select('id')
-        .maybeSingle();
+        .eq('id', id);
+    if (!isAdmin()) {
+        deleteQuery = deleteQuery.eq('created_by', currentUser.id);
+    }
+    const { data, error } = await deleteQuery.select('id').maybeSingle();
     if (error) {
         setStatus(
             myPropertiesStatus,
