@@ -6,6 +6,7 @@ const myPropertiesEmpty = document.getElementById('myPropertiesEmpty');
 const myPropertiesEmptyMessage = document.getElementById('myPropertiesEmptyMessage');
 const myPropertiesLoginLink = document.getElementById('myPropertiesLoginLink');
 const myPropertiesPublishLink = document.getElementById('myPropertiesPublishLink');
+const myPropertiesStatus = document.getElementById('myPropertiesStatus');
 const editPropertyPanel = document.getElementById('editPropertyPanel');
 const editPropertyForm = document.getElementById('editPropertyForm');
 const editPropertyStatus = document.getElementById('editPropertyStatus');
@@ -485,15 +486,34 @@ window.deleteProperty = async function(id) {
         return;
     }
 
-    const { error } = await supabase.from('properties').delete().eq('id', id);
+    setStatus(myPropertiesStatus, 'Suppression en cours…');
+    const { data, error } = await supabase
+        .from('properties')
+        .delete()
+        .eq('id', id)
+        .select('id')
+        .maybeSingle();
     if (error) {
-        setStatus(propertyStatus, `La suppression a échoué : ${error.message}`, true);
+        setStatus(
+            myPropertiesStatus,
+            `Supabase a refusé la suppression : ${error.message}. Vérifiez que vous êtes connecté au compte propriétaire et réexécutez le SQL de supabase/schema.sql dans l’éditeur SQL Supabase.`,
+            true
+        );
+        return;
+    }
+    if (!data) {
+        setStatus(
+            myPropertiesStatus,
+            'Aucune annonce supprimée. Vérifiez que vous êtes connecté au compte propriétaire et réexécutez le SQL de supabase/schema.sql dans l’éditeur SQL Supabase.',
+            true
+        );
         return;
     }
     if (editingPropertyId === id) {
         cancelPropertyEdit();
     }
     await loadProperties();
+    setStatus(myPropertiesStatus, 'Annonce supprimée.');
 };
 
 searchInput.addEventListener('input', filterAndRender);
