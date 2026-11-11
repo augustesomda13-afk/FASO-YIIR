@@ -40,24 +40,6 @@ create policy "Owners and admins can delete properties"
         or (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
     );
 
-insert into public.properties (title, type, location, price, image, contact)
-select 'Belle villa meublée', 'Villa', 'Ouaga 2000, Ouagadougou', 250000,
-       'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=600&q=80',
-       '+226 70 00 00 01'
-where not exists (
-    select 1 from public.properties
-    where title = 'Belle villa meublée' and location = 'Ouaga 2000, Ouagadougou'
-);
-
-insert into public.properties (title, type, location, price, image, contact)
-select 'Appartement propre 2 pièces', 'Appartement', 'Koulouba, Ouagadougou', 75000,
-       'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=600&q=80',
-       '+226 76 00 00 02'
-where not exists (
-    select 1 from public.properties
-    where title = 'Appartement propre 2 pièces' and location = 'Koulouba, Ouagadougou'
-);
-
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('property-images', 'property-images', true, 5242880, array['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
 on conflict (id) do update

@@ -29,7 +29,7 @@
     <section class="hero">
         <div class="hero-inner">
             <h1 class="hero-title">Trouvez votre prochaine maison ou villa au Burkina Faso</h1>
-            <p class="hero-text">Louez facilement à Ouagadougou, Bobo-Dioulasso et réservez en ligne par Mobile Money.</p>
+            <p class="hero-text">Trouvez un logement et contactez directement l’hôte par téléphone ou WhatsApp. Confirmez avec lui la disponibilité, le prix et les modalités de paiement.</p>
             <div class="search-box">
                 <input class="field search-field" type="search" id="searchInput" placeholder="Rechercher par quartier (ex: Ouaga 2000...)" aria-label="Rechercher un logement">
                 <select class="field search-type" id="filterType" aria-label="Filtrer par type">
@@ -49,8 +49,8 @@
         <div class="ad-content">
             <i class="fa-solid fa-bullhorn" aria-hidden="true"></i>
             <div>
-                <h2 class="ad-title">Votre publicité ici</h2>
-                <p class="ad-text">Présentez votre activité aux visiteurs de FASO-YIIR.</p>
+                <h2 class="ad-title">Espace annonceurs</h2>
+                <p class="ad-text">Mise en avant prévue : 5 000 FCFA par semaine. Le service n’est pas encore ouvert ; aucun paiement ne doit être envoyé.</p>
             </div>
         </div>
     </aside>
@@ -64,7 +64,7 @@
             <div class="property-grid" id="propertyGrid"></div>
             <div class="empty-state hidden" id="emptyState">
                 <i class="fa-solid fa-house-circle-xmark" aria-hidden="true"></i>
-                <p>Aucun logement ne correspond à votre recherche.</p>
+                <p>Aucun logement ne correspond à votre recherche, ou aucune annonce n’est publiée pour le moment.</p>
             </div>
             <section class="my-properties" id="myProperties" aria-labelledby="myPropertiesTitle">
                 <div class="section-heading">
@@ -189,37 +189,8 @@
         </section>
     </main>
 
-    <div class="modal hidden" id="bookingModal">
-        <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-            <button class="modal-close" type="button" onclick="closeModal()" aria-label="Fermer"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
-            <div class="modal-heading">
-                <span class="modal-icon"><i class="fa-solid fa-credit-card" aria-hidden="true"></i></span>
-                <h2 class="modal-title" id="modalTitle">Réservation & Paiement</h2>
-                <p class="helper-text" id="modalPropertyTitle"></p>
-            </div>
-            <form class="form-stack" id="paymentForm">
-                <div class="form-field">
-                    <label class="field-label" for="modalPrice">Montant à régler (FCFA)</label>
-                    <input class="field price-field" type="text" id="modalPrice" readonly>
-                </div>
-                <fieldset class="operator-field">
-                    <legend class="field-label">Choisissez votre opérateur</legend>
-                    <div class="operator-list">
-                        <label class="operator-option"><input type="radio" name="operator" value="Orange Money" required><span class="orange-text">Orange Money</span></label>
-                        <label class="operator-option"><input type="radio" name="operator" value="Moov Money" required><span class="blue-text">Moov Money</span></label>
-                    </div>
-                </fieldset>
-                <div class="form-field">
-                    <label class="field-label" for="payerPhone">Numéro de téléphone (Burkina Faso)</label>
-                    <input class="field" type="tel" id="payerPhone" required placeholder="+226 XX XX XX XX">
-                </div>
-                <button class="button button-primary button-full" type="submit">Confirmer le paiement</button>
-            </form>
-        </section>
-    </div>
-
     <footer class="footer">
-        <p>&copy; 2026 FASO YIIR - Conçu pour dynamiser l’immobilier au Burkina Faso.</p>
+        <p>&copy; 2026 FASO YIIR - Conçu pour dynamiser l’immobilier au Burkina Faso. Réservations et paiements à convenir directement avec l’hôte ; aucune transaction n’est confirmée sur ce site.</p>
     </footer>
 
     <script src="supabase-config.js"></script>

@@ -24,31 +24,6 @@ const signedInAs = document.getElementById('signedInAs');
 const signOutButton = document.getElementById('signOutButton');
 const publishAccess = document.getElementById('publishAccess');
 const propertyStatus = document.getElementById('propertyStatus');
-const bookingModal = document.getElementById('bookingModal');
-const modalPropertyTitle = document.getElementById('modalPropertyTitle');
-const modalPrice = document.getElementById('modalPrice');
-const paymentForm = document.getElementById('paymentForm');
-
-const defaultProperties = [
-    {
-        id: 1,
-        title: 'Belle villa meublée',
-        type: 'Villa',
-        location: 'Ouaga 2000, Ouagadougou',
-        price: 250000,
-        image: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=600&q=80',
-        contact: '+226 70 00 00 01'
-    },
-    {
-        id: 2,
-        title: 'Appartement propre 2 pièces',
-        type: 'Appartement',
-        location: 'Koulouba, Ouagadougou',
-        price: 75000,
-        image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=600&q=80',
-        contact: '+226 76 00 00 02'
-    }
-];
 
 const config = window.FASO_YIIR_SUPABASE;
 const supabaseConfigPresent = Boolean(config?.url && config?.anonKey);
@@ -62,7 +37,6 @@ const supabase = supabaseReady
 
 let properties = [];
 let currentUser = null;
-let selectedProperty = null;
 let editingPropertyId = null;
 
 function setStatus(element, message, isError = false) {
@@ -73,6 +47,35 @@ function setStatus(element, message, isError = false) {
 
 function isAdmin() {
     return currentUser?.app_metadata?.role === 'admin';
+}
+
+function getWhatsAppNumber(contact) {
+    const digits = String(contact ?? '').replace(/\D/g, '');
+    const nationalNumber = digits.startsWith('00226')
+        ? digits.slice(5)
+        : digits.startsWith('226')
+            ? digits.slice(3)
+            : digits;
+    const localNumber = nationalNumber.length === 9 && nationalNumber.startsWith('0')
+        ? nationalNumber.slice(1)
+        : nationalNumber;
+
+    return /^\d{8}$/.test(localNumber) ? `226${localNumber}` : null;
+}
+
+function getTelephoneHref(contact) {
+    const value = String(contact ?? '').trim();
+    const digits = value.replace(/\D/g, '');
+    const whatsAppNumber = getWhatsAppNumber(value);
+    if (whatsAppNumber) {
+        return `tel:+${whatsAppNumber}`;
+    }
+
+    const internationalNumber = digits.startsWith('00') ? digits.slice(2) : digits;
+    if (!(value.startsWith('+') || digits.startsWith('00')) || !/^\d{7,15}$/.test(internationalNumber)) {
+        return null;
+    }
+    return `tel:+${internationalNumber}`;
 }
 
 function renderMyProperties() {
@@ -165,21 +168,35 @@ function renderProperties(data = properties) {
 
         const actions = document.createElement('div');
         actions.className = 'property-actions';
-        const reserveButton = document.createElement('button');
-        reserveButton.type = 'button';
-        reserveButton.className = 'button button-primary button-full';
-        reserveButton.textContent = 'Réserver & Payer';
-        reserveButton.addEventListener('click', () => window.openModal(property.id));
+        const whatsAppNumber = getWhatsAppNumber(property.contact);
+        const telephoneHref = getTelephoneHref(property.contact);
+        let showContactButton = true;
+        const contactButton = document.createElement('a');
+        contactButton.className = 'button button-primary button-full';
+        if (whatsAppNumber) {
+            const message = `Bonjour, je suis intéressé(e) par « ${property.title} » à ${property.location}, affiché à ${Number(property.price).toLocaleString()} FCFA par mois. Est-il toujours disponible ?`;
+            contactButton.href = `https://wa.me/${whatsAppNumber}?text=${encodeURIComponent(message)}`;
+            contactButton.target = '_blank';
+            contactButton.rel = 'noopener noreferrer';
+            contactButton.textContent = 'Écrire sur WhatsApp';
+        } else if (telephoneHref) {
+            contactButton.href = telephoneHref;
+            contactButton.textContent = 'Appeler l’hôte';
+        } else {
+            showContactButton = false;
+        }
 
         const secondaryActions = document.createElement('div');
         secondaryActions.className = 'property-links';
-        const callLink = document.createElement('a');
-        callLink.className = 'button call-link';
-        callLink.href = `tel:${String(property.contact).replace(/[^\d+]/g, '')}`;
-        callLink.textContent = 'Appeler';
-        secondaryActions.append(callLink);
+        if (whatsAppNumber && telephoneHref) {
+            const callLink = document.createElement('a');
+            callLink.className = 'button call-link';
+            callLink.href = telephoneHref;
+            callLink.textContent = 'Appeler';
+            secondaryActions.append(callLink);
+        }
 
-        if (currentUser) {
+        if (currentUser && (property.created_by === currentUser.id || isAdmin())) {
             const deleteButton = document.createElement('button');
             deleteButton.type = 'button';
             deleteButton.className = 'button delete-button';
@@ -188,7 +205,12 @@ function renderProperties(data = properties) {
             secondaryActions.append(deleteButton);
         }
 
-        actions.append(reserveButton, secondaryActions);
+        if (showContactButton) {
+            actions.append(contactButton);
+        }
+        if (secondaryActions.childElementCount || currentUser) {
+            actions.append(secondaryActions);
+        }
         card.append(details, actions);
         propertyGrid.append(card);
     });
@@ -211,29 +233,37 @@ function updateAccountUI() {
 
 async function loadProperties() {
     if (!supabaseReady) {
-        properties = defaultProperties;
-        backendStatus.textContent = supabaseConfigPresent
-            ? 'La bibliothèque Supabase ne s’est pas chargée. Vérifiez votre connexion Internet ; la publication est désactivée.'
-            : 'La base partagée n’est pas encore configurée. Le catalogue de démonstration est affiché ; la publication est désactivée.';
+        properties = [];
+        setStatus(
+            backendStatus,
+            supabaseConfigPresent
+                ? 'La bibliothèque de données ne s’est pas chargée. Vérifiez votre connexion ; les annonces et la publication sont indisponibles.'
+                : 'La base partagée n’est pas configurée. Les annonces et la publication sont indisponibles.',
+            true
+        );
         updateAccountUI();
         return;
     }
 
-    backendStatus.textContent = '';
-    const { data, error } = await supabase
-        .from('properties')
-        .select('id, title, type, location, price, image, contact, created_by')
-        .order('created_at', { ascending: false });
-
-    if (error) {
-        properties = defaultProperties;
-        renderProperties();
-        renderMyProperties();
-        setStatus(backendStatus, `La base partagée n’est pas encore prête (${error.message}). Le catalogue de démonstration reste affiché.`, true);
-        return;
+    try {
+        const { data, error } = await supabase
+            .from('properties')
+            .select('id, title, type, location, price, image, contact, created_by')
+            .order('created_at', { ascending: false });
+        if (error) {
+            throw error;
+        }
+        properties = data ?? [];
+        backendStatus.textContent = '';
+    } catch (error) {
+        properties = [];
+        setStatus(
+            backendStatus,
+            `Impossible de charger les annonces (${error.message || 'erreur de connexion'}). Réessayez plus tard.`,
+            true
+        );
     }
 
-    properties = data;
     renderProperties();
     renderMyProperties();
 }
@@ -276,32 +306,6 @@ function filterAndRender() {
     });
     renderProperties(filtered);
 }
-
-window.openModal = function(id) {
-    selectedProperty = properties.find(property => property.id === id);
-    if (!selectedProperty) {
-        return;
-    }
-    modalPropertyTitle.textContent = `${selectedProperty.title} (${selectedProperty.location})`;
-    modalPrice.value = `${Number(selectedProperty.price).toLocaleString()} FCFA`;
-    bookingModal.classList.remove('hidden');
-};
-
-window.closeModal = function() {
-    bookingModal.classList.add('hidden');
-    paymentForm.reset();
-};
-
-paymentForm.addEventListener('submit', function(event) {
-    event.preventDefault();
-    if (!selectedProperty) {
-        return;
-    }
-    const operator = document.querySelector('input[name="operator"]:checked')?.value;
-    const phone = document.getElementById('payerPhone').value;
-    alert(`Demande de paiement envoyée !\n\nUn code de validation ${operator} a été envoyé au ${phone} pour la réservation de : "${selectedProperty.title}".\n\n(Simulation réussie)`);
-    window.closeModal();
-});
 
 authForm.addEventListener('submit', async function(event) {
     event.preventDefault();
