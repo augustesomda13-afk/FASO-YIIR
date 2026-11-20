@@ -130,6 +130,13 @@
                     <h3 class="form-title">Connexion / inscription</h3>
                     <p class="helper-text">Connectez-vous ou créez un compte pour publier une annonce.</p>
                     <div class="form-field">
+                        <label class="field-label" for="authMethod">Mode de connexion</label>
+                        <select class="field" id="authMethod">
+                            <option value="email">Adresse e-mail</option>
+                            <option value="phone">Numéro de téléphone avec SMS</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
                         <label class="field-label" for="accountEmail">Adresse e-mail</label>
                         <input class="field" type="email" id="accountEmail" autocomplete="email" required>
                     </div>
@@ -137,9 +144,19 @@
                         <label class="field-label" for="accountPassword">Mot de passe (8 caractères minimum)</label>
                         <input class="field" type="password" id="accountPassword" autocomplete="current-password" minlength="8" required>
                     </div>
+                    <div class="form-field hidden" id="phoneField">
+                        <label class="field-label" for="accountPhone">Numéro de téléphone</label>
+                        <input class="field" type="tel" id="accountPhone" autocomplete="tel" placeholder="+226 70 00 00 00">
+                    </div>
+                    <div class="form-field hidden" id="otpField">
+                        <label class="field-label" for="accountOtp">Code reçu par SMS</label>
+                        <input class="field" type="text" id="accountOtp" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Code à 6 chiffres">
+                    </div>
                     <div class="button-row">
                         <button class="button button-primary" type="submit" name="mode" value="login">Se connecter</button>
                         <button class="button button-secondary" type="submit" name="mode" value="signup">Créer un compte</button>
+                        <button class="button button-primary hidden" type="button" id="sendSmsCode">Recevoir le code</button>
+                        <button class="button button-secondary hidden" type="button" id="verifySmsCode">Vérifier le code</button>
                     </div>
                     <p class="status" id="authStatus" role="status" aria-live="polite"></p>
                 </form>

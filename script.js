@@ -22,6 +22,15 @@ const authStatus = document.getElementById('authStatus');
 const signedInPanel = document.getElementById('signedInPanel');
 const signedInAs = document.getElementById('signedInAs');
 const signOutButton = document.getElementById('signOutButton');
+const authMethod = document.getElementById('authMethod');
+const accountEmail = document.getElementById('accountEmail');
+const accountPassword = document.getElementById('accountPassword');
+const accountPhone = document.getElementById('accountPhone');
+const accountOtp = document.getElementById('accountOtp');
+const phoneField = document.getElementById('phoneField');
+const otpField = document.getElementById('otpField');
+const sendSmsCode = document.getElementById('sendSmsCode');
+const verifySmsCode = document.getElementById('verifySmsCode');
 const publishAccess = document.getElementById('publishAccess');
 const propertyStatus = document.getElementById('propertyStatus');
 
@@ -38,6 +47,7 @@ const supabase = supabaseReady
 let properties = [];
 let currentUser = null;
 let editingPropertyId = null;
+let pendingSmsPhone = '';
 
 function setStatus(element, message, isError = false) {
     element.textContent = message;
@@ -47,6 +57,9 @@ function setStatus(element, message, isError = false) {
 
 function getAuthErrorMessage(error) {
     const message = String(error?.message || '').toLocaleLowerCase();
+    if (message.includes('sms') && (message.includes('provider') || message.includes('not enabled'))) {
+        return 'La connexion par SMS n’est pas encore activée dans Supabase. Configurez Twilio ou un autre fournisseur SMS.';
+    }
     if (message.includes('invalid login credentials')) {
         return 'Adresse e-mail ou mot de passe incorrect.';
     }
@@ -330,10 +343,113 @@ function filterAndRender() {
     renderProperties(filtered);
 }
 
+function normalizePhoneNumber(value) {
+    const digits = String(value ?? '').replace(/\D/g, '');
+    if (digits.startsWith('00226')) return `+226${digits.slice(5)}`;
+    if (digits.startsWith('226')) return `+${digits}`;
+    if (/^0\d{7}$/.test(digits)) return `+226${digits.slice(1)}`;
+    if (/^[67]\d{7}$/.test(digits)) return `+226${digits}`;
+    return digits ? `+${digits}` : '';
+}
+
+function updateAuthMethod() {
+    const phoneMode = authMethod.value === 'phone';
+    accountEmail.closest('.form-field').classList.toggle('hidden', phoneMode);
+    accountPassword.closest('.form-field').classList.toggle('hidden', phoneMode);
+    phoneField.classList.toggle('hidden', !phoneMode);
+    otpField.classList.toggle('hidden', !phoneMode || !pendingSmsPhone);
+
+    accountEmail.required = !phoneMode;
+    accountPassword.required = !phoneMode;
+    accountPhone.required = phoneMode;
+    accountOtp.required = phoneMode && Boolean(pendingSmsPhone);
+
+    authForm.querySelectorAll('button[name="mode"]').forEach(button => button.classList.toggle('hidden', phoneMode));
+    sendSmsCode.classList.toggle('hidden', !phoneMode);
+    verifySmsCode.classList.toggle('hidden', !phoneMode || !pendingSmsPhone);
+}
+
+authMethod.addEventListener('change', () => {
+    pendingSmsPhone = '';
+    accountOtp.value = '';
+    otpField.classList.add('hidden');
+    setStatus(authStatus, '');
+    updateAuthMethod();
+});
+
+sendSmsCode.addEventListener('click', async function() {
+    if (!supabaseReady) {
+        setStatus(authStatus, 'La connexion à la base n’est pas configurée.', true);
+        return;
+    }
+    pendingSmsPhone = normalizePhoneNumber(accountPhone.value);
+    if (!pendingSmsPhone) {
+        setStatus(authStatus, 'Renseignez un numéro de téléphone valide.', true);
+        return;
+    }
+
+    sendSmsCode.disabled = true;
+    setStatus(authStatus, 'Envoi du code SMS en cours…');
+    const { error } = await supabase.auth.signInWithOtp({ phone: pendingSmsPhone });
+    sendSmsCode.disabled = false;
+
+    if (error) {
+        pendingSmsPhone = '';
+        setStatus(authStatus, getAuthErrorMessage(error), true);
+        updateAuthMethod();
+        return;
+    }
+
+    otpField.classList.remove('hidden');
+    accountOtp.required = true;
+    verifySmsCode.classList.remove('hidden');
+    accountOtp.focus();
+    setStatus(authStatus, `Code envoyé au numéro ${pendingSmsPhone}.`);
+});
+
+verifySmsCode.addEventListener('click', async function() {
+    if (!pendingSmsPhone) {
+        setStatus(authStatus, 'Demandez d’abord un code SMS.', true);
+        return;
+    }
+    const token = accountOtp.value.trim();
+    if (!token) {
+        setStatus(authStatus, 'Renseignez le code reçu par SMS.', true);
+        return;
+    }
+
+    verifySmsCode.disabled = true;
+    setStatus(authStatus, 'Vérification du code en cours…');
+    const { data, error } = await supabase.auth.verifyOtp({
+        phone: pendingSmsPhone,
+        token,
+        type: 'sms'
+    });
+    verifySmsCode.disabled = false;
+
+    if (error) {
+        setStatus(authStatus, getAuthErrorMessage(error), true);
+        return;
+    }
+
+    setStatus(authStatus, 'Connexion par SMS réussie.');
+    currentUser = data.user;
+    pendingSmsPhone = '';
+    accountOtp.value = '';
+    updateAccountUI();
+    await loadProperties();
+});
+
+updateAuthMethod();
+
 authForm.addEventListener('submit', async function(event) {
     event.preventDefault();
     if (!supabaseReady) {
         setStatus(authStatus, 'La connexion à la base n’est pas configurée.', true);
+        return;
+    }
+    if (authMethod.value === 'phone') {
+        setStatus(authStatus, 'Utilisez « Recevoir le code » puis « Vérifier le code ».', true);
         return;
     }
 
