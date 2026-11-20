@@ -57,6 +57,9 @@ function setStatus(element, message, isError = false) {
 
 function getAuthErrorMessage(error) {
     const message = String(error?.message || '').toLocaleLowerCase();
+    if (message.includes('phone') && (message.includes('disabled') || message.includes('not enabled'))) {
+        return 'La connexion par téléphone est désactivée dans Supabase. Activez Phone Auth et configurez un fournisseur SMS (par exemple Twilio) dans le tableau de bord Supabase.';
+    }
     if (message.includes('sms') && (message.includes('provider') || message.includes('not enabled'))) {
         return 'La connexion par SMS n’est pas encore activée dans Supabase. Configurez Twilio ou un autre fournisseur SMS.';
     }
@@ -77,6 +80,9 @@ function getAuthErrorMessage(error) {
     }
     if (message.includes('email address') && message.includes('invalid')) {
         return 'Adresse e-mail invalide.';
+    }
+    if (message.includes('email') && (message.includes('smtp') || message.includes('sending'))) {
+        return 'L’envoi du courriel de confirmation a échoué. Vérifiez la configuration SMTP de Supabase.';
     }
     return error?.message || 'Une erreur est survenue. Vérifiez votre connexion et réessayez.';
 }
@@ -390,8 +396,14 @@ sendSmsCode.addEventListener('click', async function() {
 
     sendSmsCode.disabled = true;
     setStatus(authStatus, 'Envoi du code SMS en cours…');
-    const { error } = await supabase.auth.signInWithOtp({ phone: pendingSmsPhone });
-    sendSmsCode.disabled = false;
+    let error;
+    try {
+        ({ error } = await supabase.auth.signInWithOtp({ phone: pendingSmsPhone }));
+    } catch (requestError) {
+        error = requestError;
+    } finally {
+        sendSmsCode.disabled = false;
+    }
 
     if (error) {
         pendingSmsPhone = '';
@@ -420,12 +432,19 @@ verifySmsCode.addEventListener('click', async function() {
 
     verifySmsCode.disabled = true;
     setStatus(authStatus, 'Vérification du code en cours…');
-    const { data, error } = await supabase.auth.verifyOtp({
-        phone: pendingSmsPhone,
-        token,
-        type: 'sms'
-    });
-    verifySmsCode.disabled = false;
+    let data;
+    let error;
+    try {
+        ({ data, error } = await supabase.auth.verifyOtp({
+            phone: pendingSmsPhone,
+            token,
+            type: 'sms'
+        }));
+    } catch (requestError) {
+        error = requestError;
+    } finally {
+        verifySmsCode.disabled = false;
+    }
 
     if (error) {
         setStatus(authStatus, getAuthErrorMessage(error), true);
@@ -466,17 +485,23 @@ authForm.addEventListener('submit', async function(event) {
 
     setStatus(authStatus, mode === 'signup' ? 'Création du compte en cours…' : 'Connexion en cours…');
 
-    const { error, data } = mode === 'signup'
-        ? await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                emailRedirectTo: `${window.location.origin}${window.location.pathname}`
-            }
-        })
-        : await supabase.auth.signInWithPassword({ email, password });
-
-    submitButtons.forEach(button => { button.disabled = false; });
+    let error;
+    let data;
+    try {
+        ({ error, data } = mode === 'signup'
+            ? await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    emailRedirectTo: `${window.location.origin}${window.location.pathname}`
+                }
+            })
+            : await supabase.auth.signInWithPassword({ email, password }));
+    } catch (requestError) {
+        error = requestError;
+    } finally {
+        submitButtons.forEach(button => { button.disabled = false; });
+    }
 
     if (error) {
         setStatus(authStatus, getAuthErrorMessage(error), true);
