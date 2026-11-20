@@ -45,6 +45,29 @@ function setStatus(element, message, isError = false) {
     element.classList.toggle('status-normal', !isError);
 }
 
+function getAuthErrorMessage(error) {
+    const message = String(error?.message || '').toLocaleLowerCase();
+    if (message.includes('invalid login credentials')) {
+        return 'Adresse e-mail ou mot de passe incorrect.';
+    }
+    if (message.includes('email not confirmed')) {
+        return 'Votre adresse e-mail n’est pas encore confirmée. Ouvrez le lien reçu par e-mail, puis reconnectez-vous.';
+    }
+    if (message.includes('user already registered')) {
+        return 'Un compte existe déjà avec cette adresse e-mail. Utilisez « Se connecter ».';
+    }
+    if (message.includes('signup is disabled')) {
+        return 'Les inscriptions sont temporairement désactivées. Réessayez plus tard.';
+    }
+    if (message.includes('rate limit') || message.includes('too many requests')) {
+        return 'Trop de tentatives. Patientez quelques minutes avant de réessayer.';
+    }
+    if (message.includes('email address') && message.includes('invalid')) {
+        return 'Adresse e-mail invalide.';
+    }
+    return error?.message || 'Une erreur est survenue. Vérifiez votre connexion et réessayez.';
+}
+
 function isAdmin() {
     return currentUser?.app_metadata?.role === 'admin';
 }
@@ -316,19 +339,36 @@ authForm.addEventListener('submit', async function(event) {
 
     const submitter = event.submitter;
     const mode = submitter?.value;
+    if (!mode) {
+        setStatus(authStatus, 'Choisissez « Se connecter » ou « Créer un compte ».', true);
+        return;
+    }
     const email = document.getElementById('accountEmail').value.trim();
     const password = document.getElementById('accountPassword').value;
+    const submitButtons = authForm.querySelectorAll('button[type="submit"]');
+    submitButtons.forEach(button => { button.disabled = true; });
+
+    setStatus(authStatus, mode === 'signup' ? 'Création du compte en cours…' : 'Connexion en cours…');
+
     const { error, data } = mode === 'signup'
-        ? await supabase.auth.signUp({ email, password })
+        ? await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                emailRedirectTo: `${window.location.origin}${window.location.pathname}`
+            }
+        })
         : await supabase.auth.signInWithPassword({ email, password });
 
+    submitButtons.forEach(button => { button.disabled = false; });
+
     if (error) {
-        setStatus(authStatus, error.message, true);
+        setStatus(authStatus, getAuthErrorMessage(error), true);
         return;
     }
 
     if (mode === 'signup' && !data.session) {
-        setStatus(authStatus, 'Compte créé. Vérifiez votre boîte e-mail pour confirmer votre adresse avant de vous connecter.');
+        setStatus(authStatus, 'Compte créé. Vérifiez votre boîte e-mail (et vos courriers indésirables), puis ouvrez le lien de confirmation avant de vous connecter.');
         authForm.reset();
         return;
     }
