@@ -22,9 +22,6 @@ const authStatus = document.getElementById('authStatus');
 const signedInPanel = document.getElementById('signedInPanel');
 const signedInAs = document.getElementById('signedInAs');
 const signOutButton = document.getElementById('signOutButton');
-const authMethod = document.getElementById('authMethod');
-const accountEmail = document.getElementById('accountEmail');
-const accountPassword = document.getElementById('accountPassword');
 const accountPhone = document.getElementById('accountPhone');
 const accountOtp = document.getElementById('accountOtp');
 const phoneField = document.getElementById('phoneField');
@@ -57,32 +54,24 @@ function setStatus(element, message, isError = false) {
 
 function getAuthErrorMessage(error) {
     const message = String(error?.message || '').toLocaleLowerCase();
-    if (message.includes('phone') && (message.includes('disabled') || message.includes('not enabled'))) {
+    if (message.includes('phone') && (
+        message.includes('disabled') ||
+        message.includes('not enabled') ||
+        message.includes('not allowed')
+    )) {
         return 'La connexion par téléphone est désactivée dans Supabase. Activez Phone Auth et configurez un fournisseur SMS (par exemple Twilio) dans le tableau de bord Supabase.';
     }
     if (message.includes('sms') && (message.includes('provider') || message.includes('not enabled'))) {
         return 'La connexion par SMS n’est pas encore activée dans Supabase. Configurez Twilio ou un autre fournisseur SMS.';
     }
-    if (message.includes('invalid login credentials')) {
-        return 'Adresse e-mail ou mot de passe incorrect.';
-    }
-    if (message.includes('email not confirmed')) {
-        return 'Votre adresse e-mail n’est pas encore confirmée. Ouvrez le lien reçu par e-mail, puis reconnectez-vous.';
-    }
-    if (message.includes('user already registered')) {
-        return 'Un compte existe déjà avec cette adresse e-mail. Utilisez « Se connecter ».';
-    }
     if (message.includes('signup is disabled')) {
-        return 'Les inscriptions sont temporairement désactivées. Réessayez plus tard.';
+        return 'Les inscriptions sont temporairement désactivées dans Supabase. Réessayez plus tard.';
     }
     if (message.includes('rate limit') || message.includes('too many requests')) {
         return 'Trop de tentatives. Patientez quelques minutes avant de réessayer.';
     }
-    if (message.includes('email address') && message.includes('invalid')) {
-        return 'Adresse e-mail invalide.';
-    }
-    if (message.includes('email') && (message.includes('smtp') || message.includes('sending'))) {
-        return 'L’envoi du courriel de confirmation a échoué. Vérifiez la configuration SMTP de Supabase.';
+    if (message.includes('phone') && message.includes('invalid')) {
+        return 'Numéro invalide. Saisissez-le avec l’indicatif du pays, par exemple +226 70 00 00 00.';
     }
     return error?.message || 'Une erreur est survenue. Vérifiez votre connexion et réessayez.';
 }
@@ -265,7 +254,7 @@ function updateAccountUI() {
     propertyForm.classList.toggle('hidden', !signedIn || !supabaseReady);
     publishAccess.classList.toggle('hidden', signedIn && supabaseReady);
     if (signedIn) {
-        signedInAs.textContent = `Connecté : ${currentUser.email}`;
+        signedInAs.textContent = `Connecté : ${currentUser.phone || currentUser.email}`;
     } else if (supabaseReady) {
         publishAccess.textContent = 'Connectez-vous ou créez un compte pour publier une annonce.';
     }
@@ -358,32 +347,7 @@ function normalizePhoneNumber(value) {
     return digits ? `+${digits}` : '';
 }
 
-function updateAuthMethod() {
-    const phoneMode = authMethod.value === 'phone';
-    accountEmail.closest('.form-field').classList.toggle('hidden', phoneMode);
-    accountPassword.closest('.form-field').classList.toggle('hidden', phoneMode);
-    phoneField.classList.toggle('hidden', !phoneMode);
-    otpField.classList.toggle('hidden', !phoneMode || !pendingSmsPhone);
-
-    accountEmail.required = !phoneMode;
-    accountPassword.required = !phoneMode;
-    accountPhone.required = phoneMode;
-    accountOtp.required = phoneMode && Boolean(pendingSmsPhone);
-
-    authForm.querySelectorAll('button[name="mode"]').forEach(button => button.classList.toggle('hidden', phoneMode));
-    sendSmsCode.classList.toggle('hidden', !phoneMode);
-    verifySmsCode.classList.toggle('hidden', !phoneMode || !pendingSmsPhone);
-}
-
-authMethod.addEventListener('change', () => {
-    pendingSmsPhone = '';
-    accountOtp.value = '';
-    otpField.classList.add('hidden');
-    setStatus(authStatus, '');
-    updateAuthMethod();
-});
-
-sendSmsCode.addEventListener('click', async function() {
+async function requestSmsCode() {
     if (!supabaseReady) {
         setStatus(authStatus, 'La connexion à la base n’est pas configurée.', true);
         return;
@@ -408,16 +372,19 @@ sendSmsCode.addEventListener('click', async function() {
     if (error) {
         pendingSmsPhone = '';
         setStatus(authStatus, getAuthErrorMessage(error), true);
-        updateAuthMethod();
+        otpField.classList.add('hidden');
+        accountOtp.required = false;
+        verifySmsCode.classList.add('hidden');
         return;
     }
 
     otpField.classList.remove('hidden');
     accountOtp.required = true;
     verifySmsCode.classList.remove('hidden');
+    sendSmsCode.textContent = 'Renvoyer le code SMS';
     accountOtp.focus();
     setStatus(authStatus, `Code envoyé au numéro ${pendingSmsPhone}.`);
-});
+}
 
 verifySmsCode.addEventListener('click', async function() {
     if (!pendingSmsPhone) {
@@ -459,65 +426,9 @@ verifySmsCode.addEventListener('click', async function() {
     await loadProperties();
 });
 
-updateAuthMethod();
-
 authForm.addEventListener('submit', async function(event) {
     event.preventDefault();
-    if (!supabaseReady) {
-        setStatus(authStatus, 'La connexion à la base n’est pas configurée.', true);
-        return;
-    }
-    if (authMethod.value === 'phone') {
-        setStatus(authStatus, 'Utilisez « Recevoir le code » puis « Vérifier le code ».', true);
-        return;
-    }
-
-    const submitter = event.submitter;
-    const mode = submitter?.value;
-    if (!mode) {
-        setStatus(authStatus, 'Choisissez « Se connecter » ou « Créer un compte ».', true);
-        return;
-    }
-    const email = document.getElementById('accountEmail').value.trim();
-    const password = document.getElementById('accountPassword').value;
-    const submitButtons = authForm.querySelectorAll('button[type="submit"]');
-    submitButtons.forEach(button => { button.disabled = true; });
-
-    setStatus(authStatus, mode === 'signup' ? 'Création du compte en cours…' : 'Connexion en cours…');
-
-    let error;
-    let data;
-    try {
-        ({ error, data } = mode === 'signup'
-            ? await supabase.auth.signUp({
-                email,
-                password,
-                options: {
-                    emailRedirectTo: `${window.location.origin}${window.location.pathname}`
-                }
-            })
-            : await supabase.auth.signInWithPassword({ email, password }));
-    } catch (requestError) {
-        error = requestError;
-    } finally {
-        submitButtons.forEach(button => { button.disabled = false; });
-    }
-
-    if (error) {
-        setStatus(authStatus, getAuthErrorMessage(error), true);
-        return;
-    }
-
-    if (mode === 'signup' && !data.session) {
-        setStatus(authStatus, 'Compte créé. Vérifiez votre boîte e-mail (et vos courriers indésirables), puis ouvrez le lien de confirmation avant de vous connecter.');
-        authForm.reset();
-        return;
-    }
-
-    setStatus(authStatus, mode === 'signup' ? 'Compte créé et connecté.' : 'Connexion réussie.');
-    currentUser = data.user;
-    updateAccountUI();
-    await loadProperties();
+    await requestSmsCode();
 });
 
 signOutButton.addEventListener('click', async function() {
